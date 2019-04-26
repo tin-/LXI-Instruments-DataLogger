@@ -7,7 +7,7 @@ void* measurement_thread(void *arg)
     extern SettingsDef Settings;
     int myid = (int)((intptr_t)arg); 
     unsigned long i = 0;
-    char response[RESPONSE_LEN-1];
+    char response[RESPONSE_LEN];
 
 
 	lxi_send(Settings.device[myid], Settings.Read_command[myid], strlen(Settings.Read_command[myid]), Settings.Timeout[myid]);  // Send SCPI commnd

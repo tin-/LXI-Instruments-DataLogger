@@ -21,19 +21,19 @@
 
 typedef struct
 {
-    int device[MAX_CHANNELS-1];
-    int Timeout[MAX_CHANNELS-1];
-    const char *Read_command[MAX_CHANNELS-1];
-    pthread_t tid[MAX_CHANNELS-1];
+    int device[MAX_CHANNELS];
+    int Timeout[MAX_CHANNELS];
+    const char *Read_command[MAX_CHANNELS];
+    pthread_t tid[MAX_CHANNELS];
     int screen_timeout;
     const char *csv_dots;
 } SettingsDef;
 
 
-pthread_t tid[MAX_CHANNELS-1];
+pthread_t tid[MAX_CHANNELS];
 uint64_t sample_num = 0;
 int term_x,term_y;
-char response_massive[MAX_CHANNELS-1][RESPONSE_LEN-1];
+char response_massive[MAX_CHANNELS][RESPONSE_LEN];
 
 WINDOW *log_win;
 WINDOW *channels_win;

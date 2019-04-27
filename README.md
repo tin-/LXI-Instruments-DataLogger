@@ -30,6 +30,11 @@ Into 'channels' config section you can configure upto 16 different instruments f
 
 For high-speed measurements(NPLC lower 0.1) you can configure refresh speed devider 'screen_refresh_div' for low CPU usage in screen refresh code. As example screen_refresh_div=100 has refreshed screen after each 100 measurements, it may take up to 2 times faster data receiving.
 
+## Screenshot
+
+![](https://misrv.com/wp-content/uploads/2019/04/cons_dl.png)
+
+
 ## License and author
 
 This code is released under GPL v3 license.

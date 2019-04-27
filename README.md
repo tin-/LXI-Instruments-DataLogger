@@ -24,7 +24,7 @@ You can use run.sh script for start applitation into [GNU Screen](https://en.wik
 If screen resized use 'r' key to window update.
 Press 'space' for pause measurements, or press 'q' for close application.
 
-Measurements data saved into csv_save_dir. CSV file name generated automatically as current date.
+Measurements data saved into csv_save_dir. CSV file name generated automatically as current date and time.
 
 Into 'channels' config section you can configure up to 16 different instruments for paralells measurements. Each instruments can be configured with different init-string, timeout, read-command, and connection settings.
 

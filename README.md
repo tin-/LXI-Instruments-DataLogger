@@ -2,7 +2,7 @@
 
 ## Introduction
 
-LXI Instruments DataLogger is application for controlling LXI-compatible instruments, such as digital multimeters,  source measurement unit, electronic load, power sources, etc.
+LXI Instruments Data Logger is application for controlling LXI-compatible instruments, such as digital multimeters,  source measurement unit, electronic load, power sources, etc.
 
 This application is based on open source [Liblxi](https://github.com/lxi-tools/liblxi) library.
 

@@ -1,0 +1,39 @@
+# LXI Instruments Data Logger
+
+## Introduction
+
+LXI Instruments DataLogger is application for controlling LXI-compatible instruments, such as digital multimeters,  source measurement unit, electronic load, power sources, etc.
+
+This application is based on open source [Liblxi](https://github.com/lxi-tools/liblxi) library.
+
+I create these applications for use on my [Raspberry Pi Zero W](https://www.raspberrypi.org/products/raspberry-pi-zero-w/) board. It has many advantages, such as: autonomous data logging, very low power consumption, simple design and flexible configuration.
+
+
+## Requriments and compile
+- Liblxi 1.13
+- Libconfig
+- Pthread
+- Libncursesw
+- GCC
+- GNU Screen
+ 
+Run make.sh to compile the application.
+
+## Usage
+You can use run.sh script for start applitation into [GNU Screen](https://en.wikipedia.org/wiki/GNU_Screen) utility. It automaticaly run screen and attach last screen session. For screen deattach (autonomous use) you can press Ctrl-A D combination. At next run, script attach to last session automatically.
+If screen resized use 'r' key to window update.
+Press 'space' for pause measurements, or press 'q' for close application.
+
+Measurements data saved into csv_save_dir. CSV file name generated automatically as current date.
+
+Into 'channels' config section you can configure upto 16 different instruments for paralells measurement's. Each instruments can be configured with different init-string, timeout, read-command, and connection settings.
+
+For high-speed measurements(NPLC lower 0.1) you can configure refresh speed devider 'screen_refresh_div' for low CPU usage in screen refresh code. As example screen_refresh_div=100 has refreshed screen after each 100 measurements, it may take up to 2 times faster data receiving.
+
+## License and author
+
+This code is released under GPL v3 license.
+
+Author: Andrey Bykanov (aka Shodan)
+E-Mail: adm@misrv.com
+Location: Tula city, Russia.

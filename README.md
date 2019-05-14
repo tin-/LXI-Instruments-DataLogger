@@ -18,12 +18,12 @@ I create these applications for use on my [Raspberry Pi Zero W](https://www.rasp
 - GNU Screen
 
 Install requirements:
-#apt-get install git screen libavahi-client3 libavahi-client-dev libxml2 libxml2-dev libconfig9 libconfig-dev libncurses5 libncurses5-dev
-#git clone https://github.com/shodanx/LXI-Instruments-DataLogger.git
-#wget https://github.com/lxi-tools/liblxi/releases/download/v1.13/liblxi-1.13.tar.xz
-#tar xf liblxi-1.13.tar.xz
-#cd liblxi-1.13
-#./configure; make; make install
+- apt-get install git screen libavahi-client3 libavahi-client-dev libxml2 libxml2-dev libconfig9 libconfig-dev libncurses5 libncurses5-dev
+- git clone https://github.com/shodanx/LXI-Instruments-DataLogger.git
+- wget https://github.com/lxi-tools/liblxi/releases/download/v1.13/liblxi-1.13.tar.xz
+- tar xf liblxi-1.13.tar.xz
+- cd liblxi-1.13
+- ./configure; make; make install
 
  
 Run make.sh to compile the application.

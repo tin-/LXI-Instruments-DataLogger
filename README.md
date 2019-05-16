@@ -13,10 +13,11 @@ I create these applications for use on my [Raspberry Pi Zero W](https://www.rasp
 - Liblxi 1.13
 - Libconfig
 - Pthread
+- Libi2c
 - Libncursesw
 - GCC
 - GNU Screen
-- Libi2c
+
 
 Install requirements:
 - apt-get install git screen libavahi-client3 libavahi-client-dev libxml2 libxml2-dev libconfig9 libconfig-dev libncursesw5 libncursesw5-dev libi2c-dev i2c-tools
@@ -39,6 +40,18 @@ Measurements data saved into csv_save_dir. CSV file name generated automatically
 Into 'channels' config section you can configure up to 16 different instruments for paralells measurements. Each instruments can be configured with different init-string, timeout, read-command, and connection settings.
 
 For high-speed measurements(NPLC lower 0.1) you can configure refresh speed devider 'screen_refresh_div' for low CPU usage in screen refresh code. As example screen_refresh_div=100 has refreshed screen after each 100 measurements, it may take up to 2 times faster data receiving.
+
+## Texas Instruments TMP117 temperature sensor support
+
+This application also support read temperature data from high precision TI TPM117 temperature sensor(up to 4 sensor on one bus).
+This feature tested only on Raspberry Pi.
+
+For enable "repeated start" sequence of TPM117 on Raspberry Pi you need do follow steps: 
+
+ 1. Enable i2c support in raspi-config.
+ 2. Add line "i2c-bcm2708" into /etc/modules
+ 3. Create file /etc/modprobe.d/i2c.conf with content "options i2c-bcm2708 combined=1"
+
 
 ## Screenshot
 

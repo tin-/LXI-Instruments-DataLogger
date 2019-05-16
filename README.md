@@ -41,9 +41,9 @@ Into 'channels' config section you can configure up to 16 different instruments 
 
 For high-speed measurements(NPLC lower 0.1) you can configure refresh speed devider 'screen_refresh_div' for low CPU usage in screen refresh code. As example screen_refresh_div=100 has refreshed screen after each 100 measurements, it may take up to 2 times faster data receiving.
 
-## Texas Instruments TMP117 temperature sensor support
+## Texas Instruments TMP117 temperature sensor
 
-This application also support read temperature data from high precision TI TPM117 temperature sensor(up to 4 sensor on one bus).
+This application also support read temperature data from high precision TI TMP 117 temperature sensor(up to 4 sensor on one I2C bus).
 This feature tested only on Raspberry Pi.
 
 For enable "repeated start" sequence of TPM117 on Raspberry Pi you need do follow steps: 

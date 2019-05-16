@@ -17,7 +17,9 @@
 #include <ncurses.h>
 #include <malloc.h>
 #include <locale.h>
+#include <linux/i2c-dev.h>
 
+static int i2c_fd;
 
 typedef struct
 {

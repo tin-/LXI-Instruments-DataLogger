@@ -27,6 +27,80 @@ void* measurement_thread(void *arg)
 }
 
 
+// ---------------------------------------------------------------------------------------------------
+
+
+int16_t i2c_read_temp(char i2c_dev_addr, char addr)
+{
+    int ret;
+    char data[2]= {0, 0};
+    struct i2c_msg msg[2];
+    struct i2c_rdwr_ioctl_data xfer = {
+	.msgs = msg,
+	.nmsgs = 2,
+    };
+
+
+    if (i2c_dev_addr < 0 || i2c_dev_addr > 255) {
+	fprintf(stderr, "i2c: Invalid I2C address. \n");
+	return 0;
+    }
+
+    ret = ioctl(i2c_fd, I2C_SLAVE_FORCE, i2c_dev_addr);
+    if (ret < 0) {
+	perror("i2c: Failed to set i2c device address");
+	return 0;
+    }
+
+
+
+    msg[0].addr = i2c_dev_addr;
+    msg[0].flags = 0;
+    msg[0].buf = &addr;
+    msg[0].len = 1;
+
+    msg[1].addr = i2c_dev_addr;
+    msg[1].flags = I2C_M_RD;
+    msg[1].buf = data;
+    msg[1].len = 2;
+
+    ioctl(i2c_fd, I2C_RDWR, &xfer);
+
+    printf( "First: %d Senond %d ", data[0] ,data[1] );
+
+    return (data[0]<<8) + data[1];
+}
+
+
+// ---------------------------------------------------------------------------------------------------
+
+
+void read_temp()
+{
+
+    float result;
+
+
+    i2c_fd = open( "/dev/i2c-1", O_RDWR );
+
+    if (i2c_fd < 0) {
+	perror("i2c: Failed to open i2c device");
+	return;
+    }
+
+    result = i2c_read_temp(0x48, 0x00);
+
+    close(i2c_fd);
+    
+    result*=0.0078125;
+
+    if ( result > -256 ) 
+    {
+	printf( "Temperature is: %.3f\n", result );
+    }
+
+}
+
 
 // ---------------------------------------------------------------------------------------------------
 
@@ -225,6 +299,7 @@ while(exit_code==0)
   }
 
   sample_num++;
+  read_temp();
   for(i = 0; i < channel_count; ++i) // Start threads
   {
      if(Settings.device[i]>=0) { 

@@ -1,6 +1,9 @@
 #include "main.h"
 
 SettingsDef Settings;
+temp_sensorsDef temperature_sensors[4];
+ const char *i2c_file_name;
+
 
 void* measurement_thread(void *arg)
 {
@@ -26,6 +29,42 @@ void* measurement_thread(void *arg)
     return NULL;
 }
 
+
+// ---------------------------------------------------------------------------------------------------
+
+
+void i2c_write(char i2c_dev_addr, char register_pointer, char data_MSB, char data_LSB)
+{
+    int ret;
+    char data[3]= {register_pointer, data_MSB, data_LSB};
+    struct i2c_msg msg[1];
+    struct i2c_rdwr_ioctl_data xfer = {
+	.msgs = msg,
+	.nmsgs = 1,
+    };
+
+
+    if (i2c_dev_addr < 0 || i2c_dev_addr > 255) {
+	fprintf(stderr, "i2c: Invalid I2C address. \n");
+	return;
+    }
+
+    ret = ioctl(i2c_fd, I2C_SLAVE_FORCE, i2c_dev_addr);
+    if (ret < 0) {
+	perror("i2c: Failed to set i2c device address");
+	return;
+    }
+
+
+    msg[0].addr = i2c_dev_addr;
+    msg[0].flags = 0;
+    msg[0].buf = data;
+    msg[0].len = 3;
+
+    ioctl(i2c_fd, I2C_RDWR, &xfer);
+
+    return;
+}
 
 // ---------------------------------------------------------------------------------------------------
 
@@ -66,8 +105,6 @@ int16_t i2c_read_temp(char i2c_dev_addr, char addr)
 
     ioctl(i2c_fd, I2C_RDWR, &xfer);
 
-    printf( "First: %d Senond %d ", data[0] ,data[1] );
-
     return (data[0]<<8) + data[1];
 }
 
@@ -75,31 +112,51 @@ int16_t i2c_read_temp(char i2c_dev_addr, char addr)
 // ---------------------------------------------------------------------------------------------------
 
 
-void read_temp()
+void configure_tmp117(int addr, int config)
 {
+    char config1=(config >> 8) & 0xFF;
+    char config2=config & 0xFF;
+    i2c_fd = open( i2c_file_name, O_RDWR );
 
+    if (i2c_fd < 0) {
+	perror("i2c: Failed to open i2c device");
+	return;
+    }
+    i2c_write(addr & 0xFF, 0x01, config1, config2);
+
+    close(i2c_fd);
+}
+
+
+// ---------------------------------------------------------------------------------------------------
+
+
+void read_temp(int chan, int addr)
+{
     float result;
 
-
-    i2c_fd = open( "/dev/i2c-1", O_RDWR );
+    i2c_fd = open( i2c_file_name, O_RDWR );
 
     if (i2c_fd < 0) {
 	perror("i2c: Failed to open i2c device");
 	return;
     }
 
-    result = i2c_read_temp(0x48, 0x00);
+    result = i2c_read_temp(addr & 0xFF , 0x00); // Read temperature register
 
     close(i2c_fd);
-    
+
     result*=0.0078125;
 
     if ( result > -256 ) 
     {
-	printf( "Temperature is: %.3f\n", result );
+       temperature_sensors[chan].temperature=result;
+//	printf( "Temp: 0x%x is: %.3f   ",addr, result );
     }
 
 }
+
+
 
 
 // ---------------------------------------------------------------------------------------------------
@@ -107,16 +164,16 @@ void read_temp()
 int main(int argc, char **argv)
 {
   config_t cfg; 
-  config_setting_t *setting, *init_commands;
+  config_setting_t *setting, *init_commands, *setting_temp;
   int i,k,exit_code=0;
   int status_addr,status;
   struct timespec start, stop;
   double accum;
   time_t tdate = time(NULL);
   const char *csv_dir;
-  char time_in_char[32];
+  char time_in_char[32],temp_in_char[32];
   char csv_file_name[512];
-  int time_in_char_pos=0;
+  int time_in_char_pos=0,temp_in_char_pos=0;
 
 
   lxi_init(); // Initialize LXI library
@@ -131,6 +188,9 @@ int main(int argc, char **argv)
     config_destroy(&cfg);
     return(EXIT_FAILURE);
   }
+
+
+  if(!config_lookup_string(&cfg, "dev_file", &i2c_file_name))i2c_file_name="/dev/i2c-1";
 
   // Open CSV File
   if(!config_lookup_string(&cfg, "csv_save_dir", &csv_dir))csv_dir="./";
@@ -152,8 +212,30 @@ int main(int argc, char **argv)
   if(!config_lookup_string(&cfg, "csv_dots", &Settings.csv_dots))Settings.csv_dots=".";
 
   if(!config_lookup_int(&cfg, "screen_refresh_div", &Settings.screen_timeout))Settings.screen_timeout=1;
-  setting = config_lookup(&cfg, "inventory.channels");
-  int channel_count = config_setting_length(setting);
+
+
+
+  // Load tmp117 config -----------------------------------------
+  setting_temp = config_lookup(&cfg, "inventory.tmp117_temperature");
+  int channel_count_temp = config_setting_length(setting_temp);
+
+
+  if(setting_temp != NULL)
+  {
+    for(i = 0; i < channel_count_temp; ++i)
+    {
+	config_setting_t *channels_temp = config_setting_get_elem(setting_temp, i);
+
+      /* Выводим только те записи, если они имеют все нужные поля. */
+      if(!(config_setting_lookup_int(channels_temp, "address", &temperature_sensors[i].i2c_address)
+           && config_setting_lookup_int(channels_temp, "config", &temperature_sensors[i].config_word)
+         ))
+        continue;
+    }
+
+  for(i = 0; i < channel_count_temp; ++i)if(temperature_sensors[i].i2c_address>0)configure_tmp117(temperature_sensors[i].i2c_address,temperature_sensors[i].config_word);
+
+  }
   // -------------------------------------------------------------
 
 
@@ -175,6 +257,9 @@ int main(int argc, char **argv)
   init_pair(2, COLOR_YELLOW, COLOR_BLACK);
 
   getmaxyx(stdscr, term_y, term_x);
+
+  setting = config_lookup(&cfg, "inventory.channels");
+  int channel_count = config_setting_length(setting);
 
   channels_win = newwin(channel_count+3, 65, 0, 0);
   wattron(channels_win,COLOR_PAIR(2));
@@ -299,7 +384,7 @@ while(exit_code==0)
   }
 
   sample_num++;
-  read_temp();
+
   for(i = 0; i < channel_count; ++i) // Start threads
   {
      if(Settings.device[i]>=0) { 
@@ -310,6 +395,8 @@ while(exit_code==0)
                          response_massive[i][1]='\0';
                       }
   }
+
+  for(i = 0; i < channel_count_temp; ++i)if(temperature_sensors[i].i2c_address>0)read_temp(i, temperature_sensors[i].i2c_address); // Read TMP117
 
   for(i = 0; i < channel_count; ++i) // Wait threads complete
   {
@@ -347,6 +434,23 @@ while(exit_code==0)
   fprintf(csv_file_descriptor,"%s;", time_in_char );
 
 
+  // Draw temperature
+  for(i = 0; i < channel_count_temp; ++i)
+  {
+    if(temperature_sensors[i].i2c_address>0)
+    {
+	sprintf(temp_in_char,"%2.3lf", temperature_sensors[i].temperature);
+
+	temp_in_char_pos=0;
+	while (strchr(",", temp_in_char[temp_in_char_pos]) == NULL)temp_in_char_pos++;
+	temp_in_char[temp_in_char_pos] = Settings.csv_dots[0];
+
+	wprintw(log_win,"%s  ", temp_in_char );
+	fprintf(csv_file_descriptor,"%s;", temp_in_char );
+    }
+  }
+
+  // Draw measure
   for(i = 0; i < channel_count; ++i)
   {
     if(Settings.device[i]>=0)mvwprintw(channels_win, i+2, 46,"%-15s", response_massive[i]); // Print response

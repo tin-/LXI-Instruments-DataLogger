@@ -31,6 +31,11 @@ typedef struct
     const char *csv_dots;
 } SettingsDef;
 
+typedef struct
+{   int i2c_address;
+    int config_word;
+    float temperature;
+} temp_sensorsDef;
 
 pthread_t tid[MAX_CHANNELS];
 uint64_t sample_num = 0;

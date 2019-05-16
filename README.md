@@ -51,6 +51,7 @@ For enable "repeated start" sequence of TPM117 on Raspberry Pi you need do follo
  1. Enable i2c support in raspi-config.
  2. Add line "i2c-bcm2708" into /etc/modules
  3. Create file /etc/modprobe.d/i2c.conf with content "options i2c-bcm2708 combined=1"
+ 4. Reboot Raspberry Pi.
 
 
 ## Screenshot

@@ -44,7 +44,7 @@ For high-speed measurements(NPLC lower 0.1) you can configure refresh speed devi
 ## Texas Instruments TMP117 temperature sensor
 
 This application also support read temperature data from high precision TI TMP 117 temperature sensor(up to 4 sensor on one I2C bus).
-This feature tested only on Raspberry Pi.
+This feature tested only on Raspberry Pi Zero W and 3B+.
 
 For enable "repeated start" sequence of TPM117 on Raspberry Pi you need do follow steps: 
 

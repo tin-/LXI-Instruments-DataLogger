@@ -53,6 +53,7 @@ For enable "repeated start" sequence of TMP117 on Raspberry Pi you need do follo
  3. Create file /etc/modprobe.d/i2c.conf with content "options i2c-bcm2708 combined=1"
  4. Reboot Raspberry Pi.
 
+To minimize Self-Heating Effect with FlexPCB use 0x2A0 configuration word of TMP117.
 
 ## Screenshot
 

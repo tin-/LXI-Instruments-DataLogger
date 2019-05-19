@@ -60,6 +60,9 @@ To minimize Self-Heating Effect with FlexPCB use 0x2A0 configuration word of TMP
 
 ![](https://misrv.com/wp-content/uploads/2019/04/cons_dl.png)
 
+## Complete solution
+![](https://misrv.com/wp-content/uploads/2019/05/FJIMG_20190519_085057.jpg)
+![](https://misrv.com/wp-content/uploads/2019/05/FJIMG_20190519_085127.jpg)
 
 ## License and author
 

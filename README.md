@@ -27,8 +27,8 @@ Install requirements:
 - cd liblxi-1.13
 - ./configure; make; make install
 
-Set correct UTF-8 locale at default in raspi-config.
-Run make.sh to compile the application.
+- Set correct UTF-8 locale at default in raspi-config.
+- Run make.sh to compile the application.
 
 ## Usage
 You can use run.sh script for start applitation into [GNU Screen](https://en.wikipedia.org/wiki/GNU_Screen) utility. It automaticaly run screen and attach last screen session. For screen deattach (autonomous use) you can press Ctrl-A D combination. At next run, script attach to last session automatically.

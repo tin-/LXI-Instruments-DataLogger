@@ -27,7 +27,7 @@ Install requirements:
 - cd liblxi-1.13
 - ./configure; make; make install
 
- 
+Set correct UTF-8 locale at default in raspi-config.
 Run make.sh to compile the application.
 
 ## Usage

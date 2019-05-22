@@ -56,6 +56,8 @@ For enable "repeated start" sequence of TMP117 on Raspberry Pi you need do follo
 
 To minimize Self-Heating Effect with FlexPCB use 0x2A0 configuration word of TMP117.
 
+FlexPCB can be ordered [here](https://oshpark.com/shared_projects/LciP4Zpo). (Order that board with Flex option only!)
+
 ## Screenshot
 
 ![](https://misrv.com/wp-content/uploads/2019/04/cons_dl.png)

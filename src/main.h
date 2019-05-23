@@ -36,6 +36,7 @@ typedef struct
 {   int i2c_address;
     int config_word;
     double delay;
+    double tmp117_last_read_time;
     float temperature;
 } temp_sensorsDef;
 

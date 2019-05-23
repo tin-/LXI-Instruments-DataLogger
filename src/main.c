@@ -168,7 +168,7 @@ int main(int argc, char **argv)
   int i,k,exit_code=0;
   int status_addr,status;
   struct timespec start, stop;
-  double accum, tmp117_last_read_time;
+  double accum;
   time_t tdate = time(NULL);
   const char *csv_dir;
   char time_in_char[32],temp_in_char[32];
@@ -419,9 +419,9 @@ while(exit_code==0)
   for(i = 0; i < channel_count_temp; ++i)
   {
     if(temperature_sensors[i].i2c_address>0)
-	if(((accum-tmp117_last_read_time)>temperature_sensors[i].delay) || tmp117_last_read_time == 0)
+	if(((accum-temperature_sensors[i].tmp117_last_read_time)>temperature_sensors[i].delay) || temperature_sensors[i].tmp117_last_read_time == 0)
 	{
-	    tmp117_last_read_time = accum;
+	    temperature_sensors[i].tmp117_last_read_time = accum;
 	    read_temp(i, temperature_sensors[i].i2c_address); // Read TMP117
 	}
   }

@@ -68,8 +68,8 @@ Legend:
 - Sample number
 - Timestamp
 - Temperature from TMP117
-- Channel 1 reading (34410A - output voltage)
-- Channel 2 reading (E36313A - input voltage)
+- Channel 0 reading (34410A - output voltage)
+- Channel 1 reading (E36313A - input voltage)
 
 ## Complete solution
 ![](https://misrv.com/wp-content/uploads/2019/05/FJIMG_20190519_085057.jpg)

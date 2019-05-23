@@ -61,7 +61,7 @@ FlexPCB can be ordered [here](https://oshpark.com/shared_projects/LciP4Zpo). (Or
 ## Screenshot
 
 Measure LM399AH 10.6V reference:
-![](https://misrv.com/wp-content/uploads/2019/05/cons_dl2.png)
+![](https://misrv.com/wp-content/uploads/2019/05/cons_dl2-e1558599552754.png)
 Legend: 
 - Sample number
 - Timestamp

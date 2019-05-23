@@ -434,13 +434,13 @@ while(exit_code==0)
   wprintw(log_win,"%-5u   ", sample_num);
   fprintf(csv_file_descriptor,"%llu;", sample_num);
 
-  sprintf(time_in_char,"%9.4lf", accum );
+  sprintf(time_in_char,"%.4f", accum );
 
   time_in_char_pos=0;
   while (strchr(",", time_in_char[time_in_char_pos]) == NULL)time_in_char_pos++;
   time_in_char[time_in_char_pos] = Settings.csv_dots[0];
 
-  wprintw(log_win,"%s  ", time_in_char);
+  wprintw(log_win,"%9.4f  ", accum );
   fprintf(csv_file_descriptor,"%s;", time_in_char);
 
 
@@ -449,13 +449,13 @@ while(exit_code==0)
   {
     if(temperature_sensors[i].i2c_address>0)
     {
-	sprintf(temp_in_char,"%7.3lf", temperature_sensors[i].temperature);
+	sprintf(temp_in_char,"%.3f", temperature_sensors[i].temperature);
 
 	temp_in_char_pos=0;
 	while (strchr(",", temp_in_char[temp_in_char_pos]) == NULL)temp_in_char_pos++;
 	temp_in_char[temp_in_char_pos] = Settings.csv_dots[0];
 
-	wprintw(log_win,"%s  ", temp_in_char );
+	wprintw(log_win,"%7.3lf  ", temperature_sensors[i].temperature);
 	fprintf(csv_file_descriptor,"%s;", temp_in_char );
     }
   }

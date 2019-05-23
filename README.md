@@ -62,14 +62,14 @@ FlexPCB can be ordered [here](https://oshpark.com/shared_projects/LciP4Zpo). (Or
 
 Measure LM399AH 10.6V reference:
 
-![](https://misrv.com/wp-content/uploads/2019/05/cons_dl2-e1558599552754.png)
+![](https://misrv.com/wp-content/uploads/2019/05/cons_dl3.jpg)
 
 Legend: 
 - Sample number
 - Timestamp
 - Ambient Temperature from TMP117
 - Channel 0 reading (34410A - output voltage)
-- Channel 1 reading (E36313A - input voltage)
+- Channel 1 reading (E36313A - input current)
 
 ## Complete solution
 ![](https://misrv.com/wp-content/uploads/2019/05/FJIMG_20190519_085057.jpg)

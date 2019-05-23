@@ -67,7 +67,7 @@ Measure LM399AH 10.6V reference:
 Legend: 
 - Sample number
 - Timestamp
-- Temperature from TMP117
+- Ambient Temperature from TMP117
 - Channel 0 reading (34410A - output voltage)
 - Channel 1 reading (E36313A - input voltage)
 

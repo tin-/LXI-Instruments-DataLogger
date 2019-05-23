@@ -2,7 +2,7 @@
 
 SettingsDef Settings;
 temp_sensorsDef temperature_sensors[4];
- const char *i2c_file_name;
+const char *i2c_file_name;
 
 
 void* measurement_thread(void *arg)
@@ -168,7 +168,7 @@ int main(int argc, char **argv)
   int i,k,exit_code=0;
   int status_addr,status;
   struct timespec start, stop;
-  double accum;
+  double accum, tmp117_last_read_time;
   time_t tdate = time(NULL);
   const char *csv_dir;
   char time_in_char[32],temp_in_char[32];
@@ -229,6 +229,7 @@ int main(int argc, char **argv)
       /* Выводим только те записи, если они имеют все нужные поля. */
       if(!(config_setting_lookup_int(channels_temp, "address", &temperature_sensors[i].i2c_address)
            && config_setting_lookup_int(channels_temp, "config", &temperature_sensors[i].config_word)
+           && config_setting_lookup_float(channels_temp, "delay", &temperature_sensors[i].delay)
          ))
         continue;
     }
@@ -396,8 +397,6 @@ while(exit_code==0)
                       }
   }
 
-  for(i = 0; i < channel_count_temp; ++i)if(temperature_sensors[i].i2c_address>0)read_temp(i, temperature_sensors[i].i2c_address); // Read TMP117
-
   for(i = 0; i < channel_count; ++i) // Wait threads complete
   {
      if(Settings.device[i]>=0)
@@ -410,7 +409,23 @@ while(exit_code==0)
  
      }
   }
+
+  // Calculate time
   clock_gettime( CLOCK_REALTIME, &stop); // Fix clock
+  accum = ( stop.tv_sec - start.tv_sec )
+        + ( stop.tv_nsec - start.tv_nsec )
+        / 1E9;
+
+  for(i = 0; i < channel_count_temp; ++i)
+  {
+    if(temperature_sensors[i].i2c_address>0)
+	if(((accum-tmp117_last_read_time)>temperature_sensors[i].delay) || tmp117_last_read_time == 0)
+	{
+	    tmp117_last_read_time = accum;
+	    read_temp(i, temperature_sensors[i].i2c_address); // Read TMP117
+	}
+  }
+
   // ---------------------------------------------------------
 
   wprintw(log_win,"\n");
@@ -419,19 +434,14 @@ while(exit_code==0)
   wprintw(log_win,"%-5u   ", sample_num);
   fprintf(csv_file_descriptor,"%llu;", sample_num);
 
-  // Calculate time
-  accum = ( stop.tv_sec - start.tv_sec )
-        + ( stop.tv_nsec - start.tv_nsec )
-        / 1E9;
-
-  sprintf(time_in_char,"%1.4lf", accum );
+  sprintf(time_in_char,"%9.4lf", accum );
 
   time_in_char_pos=0;
   while (strchr(",", time_in_char[time_in_char_pos]) == NULL)time_in_char_pos++;
   time_in_char[time_in_char_pos] = Settings.csv_dots[0];
 
-  wprintw(log_win,"%s   ", time_in_char );
-  fprintf(csv_file_descriptor,"%s;", time_in_char );
+  wprintw(log_win,"%s  ", time_in_char);
+  fprintf(csv_file_descriptor,"%s;", time_in_char);
 
 
   // Draw temperature
@@ -439,7 +449,7 @@ while(exit_code==0)
   {
     if(temperature_sensors[i].i2c_address>0)
     {
-	sprintf(temp_in_char,"%2.3lf", temperature_sensors[i].temperature);
+	sprintf(temp_in_char,"%7.3lf", temperature_sensors[i].temperature);
 
 	temp_in_char_pos=0;
 	while (strchr(",", temp_in_char[temp_in_char_pos]) == NULL)temp_in_char_pos++;

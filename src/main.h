@@ -19,6 +19,7 @@
 #include <locale.h>
 #include <linux/i2c-dev.h>
 
+
 static int i2c_fd;
 
 typedef struct
@@ -34,6 +35,7 @@ typedef struct
 typedef struct
 {   int i2c_address;
     int config_word;
+    double delay;
     float temperature;
 } temp_sensorsDef;
 

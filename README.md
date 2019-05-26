@@ -59,9 +59,9 @@ To minimize SHE(Self-Heating Effect) with FlexPCB use 0x2A0 configuration word o
 
 FlexPCB can be ordered here:
 
-[Long 400mm version](https://oshpark.com/shared_projects/rqIdFGTS)
+- [Long 400mm version](https://oshpark.com/shared_projects/rqIdFGTS) High cost, low self-eating effect by Raspberry Pi board.
 
-[Short 150mm version](https://oshpark.com/shared_projects/LciP4Zpo)
+- [Short 150mm version](https://oshpark.com/shared_projects/LciP4Zpo) Low cost, high self-eating effect by Raspberry Pi board.
 
 Order that board with Flex option only!!!
 

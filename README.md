@@ -58,8 +58,11 @@ To minimize SHE(Self-Heating Effect) with FlexPCB use 0x2A0 configuration word o
 
 
 FlexPCB can be ordered here:
+
 [Long 400mm version](https://oshpark.com/shared_projects/rqIdFGTS)
+
 [Short 150mm version](https://oshpark.com/shared_projects/LciP4Zpo)
+
 Order that board with Flex option only!!!
 
 ## Screenshot

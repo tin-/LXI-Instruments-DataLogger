@@ -78,6 +78,9 @@ Legend:
 - Channel 0 reading (34410A - output voltage)
 - Channel 1 reading (E36313A - input current)
 
+After some post-processing with Execel or other software you can build graph like this:
+![](https://misrv.com/wp-content/uploads/2019/05/lm399_34410.png)
+
 ## Complete solution
 ![](https://misrv.com/wp-content/uploads/2019/05/FJIMG_20190519_085057.jpg)
 ![](https://misrv.com/wp-content/uploads/2019/05/FJIMG_20190519_085127.jpg)

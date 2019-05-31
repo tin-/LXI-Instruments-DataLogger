@@ -51,11 +51,11 @@ var ppm_Axis = d3.axisLeft(ppm)  .ticks(axis_tick);
 var formatMillisecond = d3.timeFormat(".%L"),
     formatSecond = d3.timeFormat(":%S"),
     formatMinute = d3.timeFormat("%H:%M"),
-    formatHour = d3.timeFormat("%Hh"),
-    formatDay = d3.timeFormat("%dd"),
-    formatWeek = d3.timeFormat("%b %d"),
-    formatMonth = d3.timeFormat("%B"),
-    formatYear = d3.timeFormat("%Y");
+    formatHour =   d3.timeFormat("%Hh"),
+    formatDay =    d3.timeFormat("%d %B"),
+    formatWeek =   d3.timeFormat("%d %B"),
+    formatMonth =  d3.timeFormat("%d %B"),
+    formatYear =   d3.timeFormat("%Y");
 
 function multiFormat(date) {
   return (d3.timeSecond(date) < date ? formatMillisecond

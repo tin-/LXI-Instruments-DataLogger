@@ -209,10 +209,30 @@ int main(int argc, char **argv)
     return 1;
   }
 
-  if(!config_lookup_string(&cfg, "csv_dots", &Settings.csv_dots))Settings.csv_dots=".";
+  strcat(csv_file_name, ".js");
+  FILE *js_file_descriptor = fopen(csv_file_name,"w");
+  if(js_file_descriptor == NULL) {
+    printf("\n Error trying to open 'csv.js' file. %s",csv_file_name);
+    return 1;
+  }
 
+
+  fprintf(js_file_descriptor,"var skip_samples = 1;    // Skip first samples\n");
+  fprintf(js_file_descriptor,"var cut_samples = 1666600; // Maximum  samples\n");
+  fprintf(js_file_descriptor,"var avgSamples = 64; // Moving average window \n");
+  fprintf(js_file_descriptor,"var circle_size =  2; // Bubble size          \n");
+  fprintf(js_file_descriptor,"var circle_op = 0.4;  // Bubble transparent   \n");
+  fprintf(js_file_descriptor,"var line_op = 1.0;    // Line transparent     \n");
+  fprintf(js_file_descriptor,"var axis_tick = 30;   // Tick of Y axis       \n");
+  fprintf(js_file_descriptor,"                                              \n");
+  fprintf(js_file_descriptor,"var curveArray = [                            \n");
+
+
+  if(!config_lookup_string(&cfg, "csv_dots", &Settings.csv_dots))Settings.csv_dots=".";
+  if(!config_lookup_string(&cfg, "csv_delimeter", &Settings.csv_delimeter))Settings.csv_delimeter=",";
   if(!config_lookup_int(&cfg, "screen_refresh_div", &Settings.screen_timeout))Settings.screen_timeout=1;
 
+  fprintf(csv_file_descriptor,"sample%stime%s", Settings.csv_delimeter, Settings.csv_delimeter);
 
 
   // Load tmp117 config -----------------------------------------
@@ -222,6 +242,8 @@ int main(int argc, char **argv)
 
   if(setting_temp != NULL)
   {
+    const char *device_temp_name;
+
     for(i = 0; i < channel_count_temp; ++i)
     {
 	config_setting_t *channels_temp = config_setting_get_elem(setting_temp, i);
@@ -230,11 +252,23 @@ int main(int argc, char **argv)
       if(!(config_setting_lookup_int(channels_temp, "address", &temperature_sensors[i].i2c_address)
            && config_setting_lookup_int(channels_temp, "config", &temperature_sensors[i].config_word)
            && config_setting_lookup_float(channels_temp, "delay", &temperature_sensors[i].delay)
-         ))
-        continue;
-    }
+           && config_setting_lookup_string(channels_temp, "device_name", &device_temp_name)
+         ));
+//        continue;
 
-  for(i = 0; i < channel_count_temp; ++i)if(temperature_sensors[i].i2c_address>0)configure_tmp117(temperature_sensors[i].i2c_address,temperature_sensors[i].config_word);
+	if(temperature_sensors[i].i2c_address>0)
+	{
+	    fprintf(js_file_descriptor,"    {\"curveTitle\":\"%s\",\"channel\":\"ch%i\",	\"offset\":0,		\"scale\":200,	\"group\":0,	\"tspan\":1}, \n",device_temp_name,i+17);
+        }
+
+
+    }
+  for(i = 0; i < channel_count_temp; ++i)
+    if(temperature_sensors[i].i2c_address>0)
+    {
+	configure_tmp117(temperature_sensors[i].i2c_address,temperature_sensors[i].config_word);
+	fprintf(csv_file_descriptor,"temp%i%s", i+1, Settings.csv_delimeter);
+    }
 
   }
   // -------------------------------------------------------------
@@ -289,7 +323,6 @@ int main(int argc, char **argv)
 
     wmove(channels_win, 1, 1);
     wprintw(channels_win,"%-7s %-20s %-15s %-15s", "Channel", "Device", "IP", "Data");
-    fprintf(csv_file_descriptor,"%-7s %-20s %-15s\n", "Channel", "Device", "IP");
 
     for(i = 0; i < channel_count; ++i)
     {
@@ -305,12 +338,15 @@ int main(int argc, char **argv)
            && config_setting_lookup_int(channels, "Port", &Port)
            && config_setting_lookup_int(channels, "Timeout", &Settings.Timeout[i])
            && config_setting_lookup_string(channels, "Read_command", &Settings.Read_command[i])
-         ))
+         )) 
         continue;
+
+      fprintf(csv_file_descriptor,"val%i%s", i+1, Settings.csv_delimeter);
+      fprintf(js_file_descriptor,"    {\"curveTitle\":\"%s\",\"channel\":\"ch%i\",	\"offset\":0,		\"scale\":1,	\"group\":0,	\"tspan\":0}, \n",device_name,i+1);
 
       wmove(channels_win, i+2, 1);
       wprintw(channels_win,"%-7i %-20s %-15s", i, device_name, IP);
-      fprintf(csv_file_descriptor,"%-7i %-20s %-15s\n",  i, device_name, IP);
+//      fprintf(csv_file_descriptor,"%-7i %-20s %-15s\n",  i, device_name, IP);
       wrefresh(channels_win);
 
       if(Protocol==1)
@@ -346,7 +382,10 @@ int main(int argc, char **argv)
       }
     }
   }
-fprintf(csv_file_descriptor,"--------------\n");
+fprintf(csv_file_descriptor,"\n");
+fprintf(js_file_descriptor,"  ];                                          \n");
+fclose(js_file_descriptor);
+
 // -------------------------------------------------------------
 
 
@@ -432,7 +471,7 @@ while(exit_code==0)
 
   // Draw log table and save CSV
   wprintw(log_win,"%-5u   ", sample_num);
-  fprintf(csv_file_descriptor,"%llu;", sample_num);
+  fprintf(csv_file_descriptor,"%llu%s", sample_num,Settings.csv_delimeter);
 
   sprintf(time_in_char,"%.4f", accum );
 
@@ -441,7 +480,7 @@ while(exit_code==0)
   time_in_char[time_in_char_pos] = Settings.csv_dots[0];
 
   wprintw(log_win,"%9.4f  ", accum );
-  fprintf(csv_file_descriptor,"%s;", time_in_char);
+  fprintf(csv_file_descriptor,"%s%s", time_in_char,Settings.csv_delimeter);
 
 
   // Draw temperature
@@ -456,7 +495,7 @@ while(exit_code==0)
 	temp_in_char[temp_in_char_pos] = Settings.csv_dots[0];
 
 	wprintw(log_win,"%7.3lf  ", temperature_sensors[i].temperature);
-	fprintf(csv_file_descriptor,"%s;", temp_in_char );
+	fprintf(csv_file_descriptor,"%s%s", temp_in_char,Settings.csv_delimeter );
     }
   }
 
@@ -465,7 +504,7 @@ while(exit_code==0)
   {
     if(Settings.device[i]>=0)mvwprintw(channels_win, i+2, 46,"%-15s", response_massive[i]); // Print response
     wprintw(log_win,"%-20s", response_massive[i]);
-    fprintf(csv_file_descriptor,"%s;", response_massive[i]);
+    fprintf(csv_file_descriptor,"%s%s", response_massive[i],Settings.csv_delimeter);
 
   }
 

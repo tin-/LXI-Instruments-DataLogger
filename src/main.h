@@ -30,6 +30,7 @@ typedef struct
     pthread_t tid[MAX_CHANNELS];
     int screen_timeout;
     const char *csv_dots;
+    const char *csv_delimeter;
 } SettingsDef;
 
 typedef struct

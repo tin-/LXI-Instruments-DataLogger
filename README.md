@@ -83,8 +83,7 @@ View graph on URL: http://RASPBERRY-PI-IP-ADDRESS/script/index.html?filename=/cs
 
 Note: use syncfs=1 when CSV file placed to TMPFS partition, otherwise use syncfs=0 to save your sd-card. 
 
-*Original version created by TiN (Illya Tsemenko https://xdevs.com/)
-*Modified by Shodan (Andrey Bykanov https://misrv.com/)
+*Original D3 graph version created by TiN (Illya Tsemenko https://xdevs.com/). Modified by Shodan (Andrey Bykanov https://misrv.com/)
 
 ## Screenshot
 

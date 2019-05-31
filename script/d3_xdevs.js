@@ -90,7 +90,7 @@ function multiFormat(date) {
       : formatYear)(date);
 }
 
-var xAxis = d3.axisBottom(x).ticks(25).tickFormat(multiFormat);;
+var xAxis = d3.axisBottom(x).ticks(20).tickFormat(multiFormat);;
 
 
 

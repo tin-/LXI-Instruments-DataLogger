@@ -78,6 +78,7 @@ This example show how you can install Nginx, create file tree, mount tmpfs stora
 - mount -a
 
 As result you can browse CSV files on URL: http://RASPBERRY-PI-IP-ADDRESS/csv/
+
 View graph on URL: http://RASPBERRY-PI-IP-ADDRESS/script/index.html?filename=/csv/NAME-OF-CSV-FILE
 
 Note: use syncfs=1 when CSV file placed to TMPFS partition, otherwise use syncfs=0 to save your sd-card. 

@@ -48,6 +48,29 @@ var yw0 = d3.scaleLinear().range([height, 0]); //char A
 var ppm = d3.scaleLinear().range([height, 0]); //char A
 var ppm_Axis = d3.axisLeft(ppm)  .ticks(axis_tick);
 
+var vertical = d3.select("body")
+      .append("div")
+      .attr("class", "remove")
+      .style("position", "absolute")
+      .style("z-index", "19")
+      .style("width", "1px")
+      .style("height", height+margin.bottom+"px")
+      .style("top", "40px")
+      .style("bottom", "0px")
+      .style("left", "0px")
+      .style("background", "#000");
+var horizontal = d3.select("body")
+      .append("div")
+      .attr("class", "remove")
+      .style("position", "absolute")
+      .style("z-index", "19")
+      .style("width", width+2000+"px")
+      .style("height", "1px")
+      .style("top", "0px")
+      .style("bottom", "0px")
+      .style("left", "70px")
+      .style("background", "#000");
+
 var formatMillisecond = d3.timeFormat(".%L"),
     formatSecond = d3.timeFormat(":%S"),
     formatMinute = d3.timeFormat("%H:%M"),
@@ -143,10 +166,29 @@ var xAxis = d3.axisBottom(x).ticks(25).tickFormat(multiFormat);;
 
 var svg4 = d3.select("body")
     .append("svg")
+    .on("click", function(){  
+       mousex = d3.mouse(this);
+       vertical.style("left", mousex[0] + 8 + "px" );
+       horizontal.style("top", mousex[1] + 6 + "px" );
+       })
+//    .on("mousemove", function(){  
+//       mousex = d3.mouse(this);
+//       vertical.style("left", mousex[0] + 4 + "px" );
+//       horizontal.style("top", mousex[1] + 4 + "px" );
+//       })
+//    .on("mouseover", function(){  
+//       mousex = d3.mouse(this);
+//       vertical.style("left", mousex[0] + 4 + "px");
+//       horizontal.style("top", mousex[1] + 4 + "px");
+//       })
     .attr("width", width2 + margin.left + 2000)
     .attr("height", height + margin.top + margin.bottom+ 20*20)
     .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
+
+
 
 function make_y_axis() {        
     return d3.axisLeft(yw0)
@@ -327,9 +369,6 @@ svg4.append("g")            // Add the PPM Axis
         .style("fill", "#000000")
         .style("font-size","18px")
         .call(ppm_Axis);
-
-svg4.append('g')
-      .attr('class', 'mouse-over-effects');
 
 svg4.append("g")            // Add the X Axis
         .attr("class", "x axis")

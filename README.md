@@ -81,6 +81,17 @@ As result you can browse CSV files on URL: http://RASPBERRY-PI-IP-ADDRESS/csv/
 
 View graph on URL: http://RASPBERRY-PI-IP-ADDRESS/script/index.html?filename=/csv/NAME-OF-CSV-FILE
 
+On each start application generate csv.js configuration file, with channel's table like as:
+![](https://misrv.com/wp-content/uploads/2019/05/7cbd4d98-2751-4529-af04-8646d53b9d78.png)
+
+Where:
+- curveTitle - Name of channel.
+- channel - id channel in special format.
+- offset - offset line an absolute value.
+- scale - line scale coefficent.
+- group - 0-don't group lines; 1-group lines at one Y axis scale.
+- tspan - main temperature sensor for calculations.
+
 Note: use syncfs=1 when CSV file placed to TMPFS partition, otherwise use syncfs=0 to save your sd-card. 
 
 *Original D3 graph version created by TiN (Illya Tsemenko https://xdevs.com/). Modified by Shodan (Andrey Bykanov https://misrv.com/)

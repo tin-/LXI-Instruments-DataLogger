@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<style type="text/css">
+/* 13. Basic Styling with CSS */
+
+/* Style the lines by removing the fill and applying a stroke */
+
+.line {
+    fill: none;
+    stroke: #ffab00;
+    stroke-width: 3;
+}
+  
+.overlay {
+  fill: none;
+  pointer-events: all;
+}
+
+/* Style the dots by assigning a fill and stroke */
+.dot {
+    fill: #ffab00;
+    stroke: #fff;
+}
+  
+  .focus circle {
+  fill: none;
+  stroke: steelblue;
+}
+
+</style>
+<!-- Body tag is where we will append our SVG and SVG objects-->
+<body>
+</body>
+
+<style>
+/* tell the SVG path to be a thin blue line without any area fill */
+
+path {stroke-width: 1;fill: none;}
+path2 {stroke-width: 1;fill: none;}
+path.average { stroke: darkviolet; stroke-width: 1px; fill: none; }
+.data1 {stroke: #0f7;}
+.data2 {stroke: orange;}
+.axis {  shape-rendering: crispEdges;}
+.x.axis line {  stroke: black;}
+.x.axis .minor {  stroke-opacity: .5;}
+.x.axis path {display: none;}
+.x.axis text {font-size: 10;}
+.y.axis line, .y.axis path {  fill: none;  stroke: #000;}
+.y.axis text {font-size: 10;}
+.y.axis .minor {  stroke-opacity: .5;}
+.y.axisRight text {fill: orange;}
+.y.axisLeft text {fill: steelblue;}
+.legend rect {
+  fill:#ddf;
+  stroke:black;
+  font-size: 14px;
+  opacity:0.6;}
+.legend text {
+  color: #f00 !important;}
+.grid .tick {
+    stroke: lightgrey;
+    opacity: 0.3;
+}
+.grid path {
+      stroke-width: 0;
+}
+
+</style>
+
+
+<script src="/script/d3.v5.min.js"></script>
+<script src="/script/d3-time-format.v2.min.js"></script>
+<script src="/script/config.js"></script>
+<script src="/script/d3_xdevs.js"></script>
+

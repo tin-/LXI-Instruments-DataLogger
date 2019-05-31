@@ -10,12 +10,6 @@ var curveArray = [
     {"curveTitle":"Keysight E36313A",	"channel":"ch3",	"offset":0.005,		"scale":1000,	"group":0,	"tspan":0}
   ];
 
-var margin = {top: 40, right: 190, bottom: 20, left: 70},
-    width = 1550,
-    width2 = 1100,
-    height = 1050 - margin.top - margin.bottom;
-    height2 = 550 - margin.top - margin.bottom;
-
 var circle_size =  2; // Bubble size
 var circle_op = 0.4;  // Bubble transparent
 var line_op = 1.0;    // Line transparent

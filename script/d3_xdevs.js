@@ -16,6 +16,16 @@ function findGetParameter(parameterName) {
 }
 
 var logname    = findGetParameter("filename");
+$.getScript(logname+'.js', function()
+{
+
+
+var margin = {top: 40, right: 190, bottom: 20, left: 70},
+    width = 1550,
+    width2 = 1100,
+    height = 1050 - margin.top - margin.bottom;
+    height2 = 550 - margin.top - margin.bottom;
+
 
 var group_max=0;
 var group_min=0;
@@ -312,4 +322,5 @@ eval('svg4.append("g").attr("class", "y axis").attr("stroke", function() {return
         .style("font-size","12px")
         .call(xAxis);
 
+});
 });

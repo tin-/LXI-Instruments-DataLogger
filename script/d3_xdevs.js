@@ -38,10 +38,9 @@ var color = d3.scaleOrdinal(d3.schemeCategory10);
 var tspan = 0;
 
 
-//var parseDate = d3.timeFormat("%d/%m/%Y-%H:%M:%S%Z").parse;
 var parseDate = d3.timeParse("%d/%m/%Y-%H:%M:%S%Z");
 
-var x = d3.scaleUtc().range([0, width]);
+var x = d3.scaleTime().range([0, width]);
 //var x = d3.scaleLinear().range([0, width]);
 
 var yw0 = d3.scaleLinear().range([height, 0]); //char A
@@ -49,7 +48,7 @@ var yw0 = d3.scaleLinear().range([height, 0]); //char A
 var ppm = d3.scaleLinear().range([height, 0]); //char A
 var ppm_Axis = d3.axisLeft(ppm)  .ticks(axis_tick);
 
-var xAxis          = d3.axisBottom(x)  .ticks(30);
+var xAxis = d3.axisBottom(x).ticks(30);
 
 
 
@@ -144,8 +143,9 @@ d3.csv(logname)
     data.splice(cut_samples,9000000);
     data.forEach(function(d) {
         cnt = +(cnt + 1);
-//        d.date = parseDate(d.date + "+1600");
-        d.date = +(d.time * 1);
+
+        d.date = parseDate(d.date);
+//        d.date = +(d.time * 1);
 
         d.ch1 = +(d.val1 * 1);
         d.ch2 = +(d.val2 * 1);
@@ -172,7 +172,6 @@ d3.csv(logname)
        
     
     // Scale the range of the data
-    //x.domain([new Date('2016-03-19T13:30:00.000'), new Date('2016-03-23T22:30:00.000')]).clamp(true);
     x.domain([d3.min(data, function(d) { return Math.min(d.date); }), d3.max(data, function(d) { return Math.max(d.date); }) ]);    
 
     // push a new data point onto the back
@@ -277,27 +276,24 @@ eval('svg4.selectAll("dot")'+
 //                                   "Temp coefficent: " + ((d3.deviation(data, function(d) { return (d[daCurve.channel]);} )*1e6) / tspan).toFixed(3) + "ppm/°C "
 );
 
-
-
-
-
-eval('svg4.append("g").attr("class", "y axis").attr("stroke", function() {return daCurve.color = color(daCurve.curveTitle);}).attr("transform", "translate(" + (width+(100*i)) +" ,0)").style("font-size","16px").call(yAxisRight_'+daCurve.channel+')');
-
+eval('svg4.append("g")' +
+	'.attr("class", "y axis")' +
+	'.attr("stroke", function() {return daCurve.color = color(daCurve.curveTitle);})' +
+	'.attr("transform", "translate(" + (width+(100*i)) +" ,0)")' +
+	'.style("font-size","16px")' +
+	'.call(yAxisRight_'+daCurve.channel+')');
 
 });
 
-
-
-
-
-    svg4.append("text")      // text label for the x axis
+svg4.append("text")      // text label for the x axis
         .attr("x", 150 )
         .attr("y",  -10 )
         .style("text-anchor", "left")
         .style("fill","#035")
         .style("font-size","24px")
         .text(logname+"      SMPL:" + cnt + " AVG:"+avgSamples+"      ΔT:" + tspan.toFixed(2) + "°C");
-    svg4.append("text")      // text label for the x axis
+
+svg4.append("text")      // text label for the x axis
         .attr("x", -50 )
         .attr("y",  -10 )
         .style("text-anchor", "right")
@@ -306,17 +302,17 @@ eval('svg4.append("g").attr("class", "y axis").attr("stroke", function() {return
         .style("font-size","16px")
         .text("PPM");
 
-    svg4.append("g")            // Add the PPM Axis
+svg4.append("g")            // Add the PPM Axis
         .attr("class", "y axis")
         .attr("transform", "translate(0 ,0)")
         .style("fill", "#000000")
         .style("font-size","18px")
         .call(ppm_Axis);
 
- svg4.append('g')
+svg4.append('g')
       .attr('class', 'mouse-over-effects');
 
-    svg4.append("g")            // Add the X Axis
+svg4.append("g")            // Add the X Axis
         .attr("class", "x axis")
         .attr("transform", "translate(0," + height + ")")
         .style("font-size","12px")

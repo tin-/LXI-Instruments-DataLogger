@@ -4,6 +4,9 @@
 SettingsDef Settings;
 temp_sensorsDef temperature_sensors[4];
 const char *i2c_file_name;
+time_t rawtime;
+struct tm * timeinfo;
+char time_buffer [80];
 
 
 void* measurement_thread(void *arg)
@@ -234,7 +237,7 @@ int main(int argc, char **argv)
   if(!config_lookup_int(&cfg, "screen_refresh_div", &Settings.screen_timeout))Settings.screen_timeout=1;
   if(!config_lookup_int(&cfg, "syncfs", &Settings.syncfs))Settings.syncfs=0;
 
-  fprintf(csv_file_descriptor,"sample%stime%s", Settings.csv_delimeter, Settings.csv_delimeter);
+  fprintf(csv_file_descriptor,"sample%sdate%stime%s", Settings.csv_delimeter, Settings.csv_delimeter, Settings.csv_delimeter);
 
 
   // Load tmp117 config -----------------------------------------
@@ -472,8 +475,14 @@ while(exit_code==0)
   wprintw(log_win,"\n");
 
   // Draw log table and save CSV
+
+  time(&rawtime);
+  timeinfo = localtime(&rawtime);
+  strftime (time_buffer,80,"%d/%m/%Y-%H:%M:%S%z",timeinfo);
+
+
   wprintw(log_win,"%-5u   ", sample_num);
-  fprintf(csv_file_descriptor,"%llu%s", sample_num,Settings.csv_delimeter);
+  fprintf(csv_file_descriptor,"%llu%s%s%s", sample_num,Settings.csv_delimeter,time_buffer,Settings.csv_delimeter);
 
   sprintf(time_in_char,"%.4f", accum );
 

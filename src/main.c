@@ -1,4 +1,5 @@
 #include "main.h"
+#include <features.h>
 
 SettingsDef Settings;
 temp_sensorsDef temperature_sensors[4];
@@ -231,6 +232,7 @@ int main(int argc, char **argv)
   if(!config_lookup_string(&cfg, "csv_dots", &Settings.csv_dots))Settings.csv_dots=".";
   if(!config_lookup_string(&cfg, "csv_delimeter", &Settings.csv_delimeter))Settings.csv_delimeter=",";
   if(!config_lookup_int(&cfg, "screen_refresh_div", &Settings.screen_timeout))Settings.screen_timeout=1;
+  if(!config_lookup_int(&cfg, "syncfs", &Settings.syncfs))Settings.syncfs=0;
 
   fprintf(csv_file_descriptor,"sample%stime%s", Settings.csv_delimeter, Settings.csv_delimeter);
 
@@ -510,6 +512,10 @@ while(exit_code==0)
 
   // finish
   fprintf(csv_file_descriptor,"\n");
+  if(Settings.syncfs==1){
+	fflush(csv_file_descriptor);
+	syncfs(fileno(csv_file_descriptor));
+    }
 
   if(screen_timeout_count>=Settings.screen_timeout)
   {

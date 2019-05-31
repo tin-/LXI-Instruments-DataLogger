@@ -18,6 +18,7 @@
 #include <malloc.h>
 #include <locale.h>
 #include <linux/i2c-dev.h>
+#include <unistd.h>
 
 
 static int i2c_fd;
@@ -31,6 +32,7 @@ typedef struct
     int screen_timeout;
     const char *csv_dots;
     const char *csv_delimeter;
+    int syncfs;
 } SettingsDef;
 
 typedef struct

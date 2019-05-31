@@ -228,7 +228,7 @@ int main(int argc, char **argv)
   fprintf(js_file_descriptor,"var circle_size =  2; // Bubble size          \n");
   fprintf(js_file_descriptor,"var circle_op = 0.4;  // Bubble transparent   \n");
   fprintf(js_file_descriptor,"var line_op = 1.0;    // Line transparent     \n");
-  fprintf(js_file_descriptor,"var axis_tick = 30;   // Tick of Y axis       \n");
+  fprintf(js_file_descriptor,"var axis_tick = 40;   // Tick of Y axis       \n");
   fprintf(js_file_descriptor,"                                              \n");
   fprintf(js_file_descriptor,"var curveArray = [                            \n");
 
@@ -265,8 +265,8 @@ int main(int argc, char **argv)
 	if(temperature_sensors[i].i2c_address>0)
 	{
 	    tspan_count++;
-	    if(tspan_count>1){fprintf(js_file_descriptor,"    {\"curveTitle\":\"%s\",\"channel\":\"ch%i\",	\"offset\":0,		\"scale\":200,	\"group\":0,	\"tspan\":0}, \n",device_temp_name,i+17);}
-	    else              fprintf(js_file_descriptor,"    {\"curveTitle\":\"%s\",\"channel\":\"ch%i\",	\"offset\":0,		\"scale\":200,	\"group\":0,	\"tspan\":1}, \n",device_temp_name,i+17);
+	    if(tspan_count>1){fprintf(js_file_descriptor,"    {\"curveTitle\":\"%s\",\"channel\":\"ch%i\",	\"offset\":0,		\"scale\":100,	\"group\":0,	\"tspan\":0}, \n",device_temp_name,i+17);}
+	    else              fprintf(js_file_descriptor,"    {\"curveTitle\":\"%s\",\"channel\":\"ch%i\",	\"offset\":0,		\"scale\":100,	\"group\":0,	\"tspan\":1}, \n",device_temp_name,i+17);
         }
 
 

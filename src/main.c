@@ -200,7 +200,7 @@ int main(int argc, char **argv)
   // Open CSV File
   if(!config_lookup_string(&cfg, "csv_save_dir", &csv_dir))csv_dir="./";
 
-  strftime(time_in_char, sizeof(time_in_char), "%c", localtime(&tdate));
+  strftime(time_in_char, sizeof(time_in_char), "%d_%m_%Y_%H:%M:%S", localtime(&tdate));
   csv_file_name[0]='\0';
   strcat(csv_file_name, csv_dir);
   strcat(csv_file_name, "/");

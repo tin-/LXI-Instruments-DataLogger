@@ -48,7 +48,26 @@ var yw0 = d3.scaleLinear().range([height, 0]); //char A
 var ppm = d3.scaleLinear().range([height, 0]); //char A
 var ppm_Axis = d3.axisLeft(ppm)  .ticks(axis_tick);
 
-var xAxis = d3.axisBottom(x).ticks(30);
+var formatMillisecond = d3.timeFormat(".%L"),
+    formatSecond = d3.timeFormat(":%S"),
+    formatMinute = d3.timeFormat("%H:%M"),
+    formatHour = d3.timeFormat("%Hh"),
+    formatDay = d3.timeFormat("%dd"),
+    formatWeek = d3.timeFormat("%b %d"),
+    formatMonth = d3.timeFormat("%B"),
+    formatYear = d3.timeFormat("%Y");
+
+function multiFormat(date) {
+  return (d3.timeSecond(date) < date ? formatMillisecond
+      : d3.timeMinute(date) < date ? formatSecond
+      : d3.timeHour(date) < date ? formatMinute
+      : d3.timeDay(date) < date ? formatHour
+      : d3.timeMonth(date) < date ? (d3.timeWeek(date) < date ? formatDay : formatWeek)
+      : d3.timeYear(date) < date ? formatMonth
+      : formatYear)(date);
+}
+
+var xAxis = d3.axisBottom(x).ticks(25).tickFormat(multiFormat);;
 
 
 

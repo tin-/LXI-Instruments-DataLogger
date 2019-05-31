@@ -1,3 +1,7 @@
+// Original version created by TiN (Illya Tsemenko https://xdevs.com/)
+// Modified by Shodan (Andrey Bykanov https://misrv.com/)
+// ---------------------------------------------------------------
+
 function findGetParameter(parameterName) {
     var result = null,
         tmp = [];

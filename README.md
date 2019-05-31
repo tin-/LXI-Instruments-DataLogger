@@ -65,7 +65,7 @@ FlexPCB can be ordered here:
 
 Order that board with Flex option only!!!
 
-## Experemental D3 web graph feature.
+## Experimental D3 web graph feature.
 
 You can install NGINX webserver for download CSV files and draw graph.
 This example show how you can install Nginx, create file tree, mount tmpfs storage for CSV file(reduce sdcard write cycles):
@@ -78,10 +78,7 @@ This example show how you can install Nginx, create file tree, mount tmpfs stora
 - mount -a
 
 As result you can browse CSV files on URL: http://RASPBERRY-PI-IP-ADDRESS/csv/
-![](https://misrv.com/wp-content/uploads/2019/05/acf73fe5-e32d-483e-8aa3-bb822b0d6f58-e1559315294172.png)
-
 View graph on URL: http://RASPBERRY-PI-IP-ADDRESS/script/index.html?filename=/csv/NAME-OF-CSV-FILE
-![](https://misrv.com/wp-content/uploads/2019/05/685aadb8-2b54-4e4b-8eb2-d40e07627619.png)
 
 *Original version created by TiN (Illya Tsemenko https://xdevs.com/)
 *Modified by Shodan (Andrey Bykanov https://misrv.com/)
@@ -102,7 +99,10 @@ Legend:
 After some post-processing with Excel or other software you can build graph like this:
 ![](https://misrv.com/wp-content/uploads/2019/05/lm399_34410.png)
 
-Or you can use Experemental D3 feature.
+Or you can use Experimental D3 feature:
+![](https://misrv.com/wp-content/uploads/2019/05/acf73fe5-e32d-483e-8aa3-bb822b0d6f58-e1559315294172.png)
+
+![](https://misrv.com/wp-content/uploads/2019/05/685aadb8-2b54-4e4b-8eb2-d40e07627619.png)
 
 ## Complete solution
 ![](https://misrv.com/wp-content/uploads/2019/05/FJIMG_20190519_085057.jpg)

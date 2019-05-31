@@ -7,6 +7,7 @@ const char *i2c_file_name;
 time_t rawtime;
 struct tm * timeinfo;
 char time_buffer [80];
+int tspan_count = 0;
 
 
 void* measurement_thread(void *arg)
@@ -263,7 +264,9 @@ int main(int argc, char **argv)
 
 	if(temperature_sensors[i].i2c_address>0)
 	{
-	    fprintf(js_file_descriptor,"    {\"curveTitle\":\"%s\",\"channel\":\"ch%i\",	\"offset\":0,		\"scale\":200,	\"group\":0,	\"tspan\":1}, \n",device_temp_name,i+17);
+	    tspan_count++;
+	    if(tspan_count>1){fprintf(js_file_descriptor,"    {\"curveTitle\":\"%s\",\"channel\":\"ch%i\",	\"offset\":0,		\"scale\":200,	\"group\":0,	\"tspan\":0}, \n",device_temp_name,i+17);}
+	    else              fprintf(js_file_descriptor,"    {\"curveTitle\":\"%s\",\"channel\":\"ch%i\",	\"offset\":0,		\"scale\":200,	\"group\":0,	\"tspan\":1}, \n",device_temp_name,i+17);
         }
 
 

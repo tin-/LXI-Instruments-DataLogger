@@ -82,7 +82,7 @@ As result you can browse CSV files on URL: http://RASPBERRY-PI-IP-ADDRESS/csv/
 View graph on URL: http://RASPBERRY-PI-IP-ADDRESS/script/index.html?filename=/csv/NAME-OF-CSV-FILE
 
 On each start application generate csv.js configuration file, with channel's table like as:
-![](https://misrv.com/wp-content/uploads/2019/05/7cbd4d98-2751-4529-af04-8646d53b9d78.png)
+![](https://misrv.com/wp-content/uploads/2019/06/aa26c667-640b-49d1-b9b7-a48c79f798d7.png)
 
 Where:
 - curveTitle - Name of channel.
@@ -91,6 +91,7 @@ Where:
 - scale - line scale coefficent.
 - group - 0-don't group lines; 1-group lines at one Y axis scale.
 - tspan - main temperature sensor for calculations.
+- axis_is_ppm - Switch between float and PPM axis label.
 
 Note: use syncfs=1 when CSV file placed to TMPFS partition, otherwise use syncfs=0 to save your sd-card. 
 
@@ -115,7 +116,7 @@ After some post-processing with Excel or other software you can build graph like
 Or you can use Experimental D3 feature for on-line graph view:
 ![](https://misrv.com/wp-content/uploads/2019/05/acf73fe5-e32d-483e-8aa3-bb822b0d6f58-e1559315294172.png)
 
-![](https://misrv.com/wp-content/uploads/2019/05/685aadb8-2b54-4e4b-8eb2-d40e07627619.png)
+![](https://misrv.com/wp-content/uploads/2019/06/c1701e98-a768-4c82-aac0-a66656f6251a.png)
 
 ## Complete solution
 ![](https://misrv.com/wp-content/uploads/2019/05/FJIMG_20190519_085057.jpg)

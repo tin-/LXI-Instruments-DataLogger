@@ -206,7 +206,7 @@ d3.csv(logname)
         cnt = +(cnt + 1);
 
         d.date = parseDate(d.date);
-        d.date = +(d.time * 1);
+//        d.date = +(d.time * 1);
 
         d.ch1 = +(d.val1 * 1);
         d.ch2 = +(d.val2 * 1);

@@ -265,8 +265,8 @@ int main(int argc, char **argv)
 	if(temperature_sensors[i].i2c_address>0)
 	{
 	    tspan_count++;
-	    if(tspan_count>1){fprintf(js_file_descriptor,"    {\"curveTitle\":\"%s\",	\"channel\":\"ch%i\",	\"offset\":0,		\"scale\":100,	\"group\":0,	\"tspan\":0,	\"axis_is_ppm\":0}, \n",device_temp_name,i+17);}
-	    else              fprintf(js_file_descriptor,"    {\"curveTitle\":\"%s\",	\"channel\":\"ch%i\",	\"offset\":0,		\"scale\":100,	\"group\":0,	\"tspan\":1,	\"axis_is_ppm\":0}, \n",device_temp_name,i+17);
+	    if(tspan_count>1){fprintf(js_file_descriptor,"    {\"curveTitle\":\"%s\",		\"channel\":\"ch%i\",	\"offset\":0,		\"scale\":100,	\"group\":0,	\"tspan\":0,	\"axis_is_ppm\":0}, \n",device_temp_name,i+17);}
+	    else              fprintf(js_file_descriptor,"    {\"curveTitle\":\"%s\",		\"channel\":\"ch%i\",	\"offset\":0,		\"scale\":100,	\"group\":0,	\"tspan\":1,	\"axis_is_ppm\":0}, \n",device_temp_name,i+17);
         }
 
 
@@ -350,7 +350,7 @@ int main(int argc, char **argv)
         continue;
 
       fprintf(csv_file_descriptor,"val%i%s", i+1, Settings.csv_delimeter);
-      fprintf(js_file_descriptor,"    {\"curveTitle\":\"%s\",	\"channel\":\"ch%i\",	\"offset\":0,		\"scale\":1,	\"group\":0,	\"tspan\":0,	\"axis_is_ppm\":0}, \n",device_name,i+1);
+      fprintf(js_file_descriptor,"    {\"curveTitle\":\"%s\",		\"channel\":\"ch%i\",	\"offset\":0,		\"scale\":1,	\"group\":0,	\"tspan\":0,	\"axis_is_ppm\":0}, \n",device_name,i+1);
 
       wmove(channels_win, i+2, 1);
       wprintw(channels_win,"%-7i %-20s %-15s", i, device_name, IP);

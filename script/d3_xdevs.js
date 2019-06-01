@@ -206,7 +206,7 @@ d3.csv(logname)
         cnt = +(cnt + 1);
 
         d.date = parseDate(d.date);
-//        d.date = +(d.time * 1);
+        d.date = +(d.time * 1);
 
         d.ch1 = +(d.val1 * 1);
         d.ch2 = +(d.val2 * 1);
@@ -250,8 +250,16 @@ svg4.append("g")
 curveArray.forEach(function(daCurve,i) { 
 
 eval(' var yAxis_w_'    + daCurve.channel +' = d3.scaleLinear().range([height, 0])');
-eval(' var yAxisRight_' + daCurve.channel +' = d3.axisRight(yAxis_w_' + daCurve.channel + ').ticks('+axis_tick+')');
-//eval(' yAxis_w_' + daCurve.channel +'.domain(d3.extent(data, function(d) { return d[daCurve.channel]; }))');
+
+if(daCurve.channel=='ch17'||daCurve.channel=='ch18'||daCurve.channel=='ch19'||daCurve.channel=='ch20'){
+    eval(' var yAxisRight_' + daCurve.channel +' = d3.axisRight(yAxis_w_' + daCurve.channel + ').ticks('+axis_tick+').tickFormat(function(d) {return d3.format(\'.2f\')(d) + \'°C\'})');
+} else {
+    if(daCurve.axis_is_ppm==0){
+	eval(' var yAxisRight_' + daCurve.channel +' = d3.axisRight(yAxis_w_' + daCurve.channel + ').ticks('+axis_tick+')');
+    } else {
+        eval(' var yAxisRight_' + daCurve.channel +' = d3.axisRight(yAxis_w_' + daCurve.channel + ').ticks('+axis_tick+').tickFormat(function(d) {return d3.format(\'.2f\')(((d/d3.median(data, function(d) { return (d[daCurve.channel]);} ))-1)*1E6) + \' ppm\'})');
+    }
+}
 
 if(daCurve.tspan>0){
 

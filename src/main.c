@@ -41,6 +41,7 @@ void* measurement_thread(void *arg)
 void i2c_write(char i2c_dev_addr, char register_pointer, char data_MSB, char data_LSB)
 {
     int ret;
+
     char data[3]= {register_pointer, data_MSB, data_LSB};
     struct i2c_msg msg[1];
     struct i2c_rdwr_ioctl_data xfer = {
@@ -337,10 +338,10 @@ int main(int argc, char **argv)
       config_setting_t *channels = config_setting_get_elem(setting, i);
 
       /* Выводим только те записи, если они имеют все нужные поля. */
-      const char *init_single, *device_name, *IP, *Instance;
+      const char *init_single, *Instance;
       int Port, Protocol;
-      if(!(config_setting_lookup_string(channels, "device_name", &device_name)
-           && config_setting_lookup_string(channels, "IP", &IP)
+      if(!(config_setting_lookup_string(channels, "device_name", &Settings.Device_name[i])
+           && config_setting_lookup_string(channels, "IP", &Settings.IP[i])
            && config_setting_lookup_int(channels, "Protocol", &Protocol)
            && config_setting_lookup_string(channels, "Instance", &Instance)
            && config_setting_lookup_int(channels, "Port", &Port)
@@ -349,20 +350,22 @@ int main(int argc, char **argv)
          )) 
         continue;
 
+      if(!config_setting_lookup_string(channels, "Exit_command", &Settings.Exit_command[i]))Settings.Exit_command[i]="";
+
       fprintf(csv_file_descriptor,"val%i%s", i+1, Settings.csv_delimeter);
-      fprintf(js_file_descriptor,"    {\"curveTitle\":\"%s\",		\"channel\":\"ch%i\",	\"offset\":0,		\"scale\":1,	\"group\":0,	\"tspan\":0,	\"axis_is_ppm\":0}, \n",device_name,i+1);
+      fprintf(js_file_descriptor,"    {\"curveTitle\":\"%s\",		\"channel\":\"ch%i\",	\"offset\":0,		\"scale\":1,	\"group\":0,	\"tspan\":0,	\"axis_is_ppm\":0}, \n",Settings.Device_name[i],i+1);
 
       wmove(channels_win, i+2, 1);
-      wprintw(channels_win,"%-7i %-20s %-15s", i, device_name, IP);
+      wprintw(channels_win,"%-7i %-20s %-15s", i, Settings.Device_name[i], Settings.IP[i]);
 //      fprintf(csv_file_descriptor,"%-7i %-20s %-15s\n",  i, device_name, IP);
       wrefresh(channels_win);
 
       if(Protocol==1)
       {
-         Settings.device[i] = lxi_connect(IP, Port, Instance, Settings.Timeout[i], VXI11);       // Try connect to LXI
+         Settings.device[i] = lxi_connect(Settings.IP[i], Port, Instance, Settings.Timeout[i], VXI11);       // Try connect to LXI
 
       } else {
-         Settings.device[i] = lxi_connect(IP, Port, Instance, Settings.Timeout[i], RAW);         // Try connect to LXI
+         Settings.device[i] = lxi_connect(Settings.IP[i], Port, Instance, Settings.Timeout[i], RAW);         // Try connect to LXI
       }
 
       if (Settings.device[i]<0)
@@ -371,7 +374,7 @@ int main(int argc, char **argv)
         wmove(channels_win, i+2, 46);
 	wprintw(channels_win,"Connection failed!");
         wrefresh(channels_win);
-        wprintw(log_win,"Can't connect to %s\n", device_name);
+        wprintw(log_win,"Can't connect to %s\n", Settings.Device_name[i]);
       } else 
       {
         // Send init commands to instruments
@@ -383,7 +386,11 @@ int main(int argc, char **argv)
                     break;
                 }
                 init_single = config_setting_get_string_elem(init_commands, k);
+
 		lxi_send(Settings.device[i], init_single, strlen(init_single), Settings.Timeout[i]);  // Send SCPI commnd
+		wprintw(log_win,"%s send init: %s\n", Settings.Device_name[i],init_single);
+	        wrefresh(log_win);
+
                 ++k;
             }
         }
@@ -410,6 +417,12 @@ while(exit_code==0)
   switch (getch())
   {
     case 'q':
+
+      for(i = 0; i < channel_count; ++i)if(Settings.device[i]>=0)
+      {
+          lxi_send(Settings.device[i], Settings.Exit_command[i], strlen(Settings.Exit_command[i]), Settings.Timeout[i]);  // Send SCPI commnd
+      }
+
       exit_code++;
       break;
 

@@ -332,6 +332,17 @@ eval('svg4.selectAll("dot")'+
     var min= d3.extent(data, function(d) { return d[daCurve.channel]; })[0];
     var diff = max - min;
 
+if(daCurve.channel=='ch17'||daCurve.channel=='ch18'||daCurve.channel=='ch19'||daCurve.channel=='ch20'){
+    svg4.append("text")      // text label for the x axis
+        .attr("x", 50 )
+        .attr("y",  height + margin.top + margin.bottom+ (20 * i) )
+        .style("text-anchor", "left")
+        .style("fill", function() {return daCurve.color = color(daCurve.curveTitle); })
+        .style("font-size","18px")
+        .text(daCurve.curveTitle + " MEDIAN: " + d3.median(data, function(d) { return (d[daCurve.channel]);} ).toFixed(5) + "°C " +
+                                   "σ=" + (d3.deviation(data, function(d) { return (d[daCurve.channel]);} )*1e3).toFixed(3) + "m°C " +
+                                   "Peak-to-peak: " + ((diff/(((max+min)/2)))).toFixed(6) + "°C");
+} else {
     svg4.append("text")      // text label for the x axis
         .attr("x", 50 )
         .attr("y",  height + margin.top + margin.bottom+ (20 * i) )
@@ -340,10 +351,8 @@ eval('svg4.selectAll("dot")'+
         .style("font-size","18px")
         .text(daCurve.curveTitle + " MEDIAN: " + d3.median(data, function(d) { return (d[daCurve.channel]);} ).toFixed(8) + " " +
                                    "σ " + (d3.deviation(data, function(d) { return (d[daCurve.channel]);} )*1e6).toFixed(3) + "u " +
-                                   "Peak-to-peak: " + ((diff/(((max+min)/2)/1E6))).toFixed(3) + "ppm"
-//                                   "Temp coefficent: " + ((diff/(((max+min)/2)/1E6)) / tspan).toFixed(3) + "ppm/°C "
-//                                   "Temp coefficent: " + ((d3.deviation(data, function(d) { return (d[daCurve.channel]);} )*1e6) / tspan).toFixed(3) + "ppm/°C "
-);
+                                   "Peak-to-peak: " + ((diff/(((max+min)/2)/1E6))).toFixed(3) + "ppm");
+}
 
 eval('svg4.append("g")' +
 	'.attr("class", "y axis")' +

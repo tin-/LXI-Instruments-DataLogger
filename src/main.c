@@ -450,14 +450,19 @@ while(exit_code==0)
          Settings.display_state=0;
       }
 
+      wprintw(log_win,"\n");
+    
       for(i = 0; i < channel_count; ++i)if(Settings.device[i]>=0)
       {
-          if(Settings.display_state==0){
-             lxi_send(Settings.device[i], Settings.Display_on_command[i], strlen(Settings.Display_on_command[i]), Settings.Timeout[i]);  // Send SCPI commnd
-          }else{
-             lxi_send(Settings.device[i], Settings.Display_off_command[i], strlen(Settings.Display_off_command[i]), Settings.Timeout[i]);  // Send SCPI commnd
-          }
+         if(Settings.display_state==0){
+            lxi_send(Settings.device[i], Settings.Display_off_command[i], strlen(Settings.Display_off_command[i]), Settings.Timeout[i]);  // Send SCPI commnd
+            wprintw(log_win,"%s send init: %s\n", Settings.Device_name[i],Settings.Display_off_command[i]);
+         }else{
+            lxi_send(Settings.device[i], Settings.Display_on_command[i], strlen(Settings.Display_on_command[i]), Settings.Timeout[i]);  // Send SCPI commnd
+            wprintw(log_win,"%s send init: %s\n", Settings.Device_name[i],Settings.Display_on_command[i]);
+         }
       }
+      wrefresh(log_win);
 
       break;
 
@@ -479,6 +484,8 @@ while(exit_code==0)
       wrefresh(channels_win);
       break;
   }
+
+  if(exit_code!=0)break;
 
   sample_num++;
 

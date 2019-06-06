@@ -234,10 +234,11 @@ int main(int argc, char **argv)
   fprintf(js_file_descriptor,"var curveArray = [                            \n");
 
 
-  if(!config_lookup_string(&cfg, "csv_dots", &Settings.csv_dots))Settings.csv_dots=".";
-  if(!config_lookup_string(&cfg, "csv_delimeter", &Settings.csv_delimeter))Settings.csv_delimeter=",";
-  if(!config_lookup_int(&cfg, "screen_refresh_div", &Settings.screen_timeout))Settings.screen_timeout=1;
-  if(!config_lookup_int(&cfg, "syncfs", &Settings.syncfs))Settings.syncfs=0;
+  if(!config_lookup_string(&cfg, "csv_dots",           &Settings.csv_dots))      Settings.csv_dots=".";
+  if(!config_lookup_string(&cfg, "csv_delimeter",      &Settings.csv_delimeter)) Settings.csv_delimeter=",";
+  if(!config_lookup_int(&cfg,    "screen_refresh_div", &Settings.screen_timeout))Settings.screen_timeout=1;
+  if(!config_lookup_int(&cfg,    "syncfs",             &Settings.syncfs))        Settings.syncfs=0;
+  if(!config_lookup_int(&cfg,    "display_state",      &Settings.display_state)) Settings.display_state=1;
 
   fprintf(csv_file_descriptor,"sample%sdate%stime%s", Settings.csv_delimeter, Settings.csv_delimeter, Settings.csv_delimeter);
 
@@ -316,7 +317,7 @@ int main(int argc, char **argv)
   wattron(help_win,COLOR_PAIR(1));
 
 
-  wprintw(help_win,"  SPACE - pause, q - quit, r - refresh window  ");
+  wprintw(help_win,"  SPACE - pause, q - quit, r - refresh window, d - display ON/OFF  ");
 
   wrefresh(log_win);
   wrefresh(channels_win);
@@ -350,7 +351,9 @@ int main(int argc, char **argv)
          )) 
         continue;
 
-      if(!config_setting_lookup_string(channels, "Exit_command", &Settings.Exit_command[i]))Settings.Exit_command[i]="";
+      if(!config_setting_lookup_string(channels, "Exit_command",        &Settings.Exit_command[i]))Settings.Exit_command[i]="";
+      if(!config_setting_lookup_string(channels, "Display_on_command",  &Settings.Display_on_command[i]))Settings.Display_on_command[i]="";
+      if(!config_setting_lookup_string(channels, "Display_off_command", &Settings.Display_off_command[i]))Settings.Display_off_command[i]="";
 
       fprintf(csv_file_descriptor,"val%i%s", i+1, Settings.csv_delimeter);
       fprintf(js_file_descriptor,"    {\"curveTitle\":\"%s\",		\"channel\":\"ch%i\",	\"offset\":0,		\"scale\":1,	\"group\":0,	\"tspan\":0,	\"axis_is_ppm\":0}, \n",Settings.Device_name[i],i+1);
@@ -367,6 +370,7 @@ int main(int argc, char **argv)
       } else {
          Settings.device[i] = lxi_connect(Settings.IP[i], Port, Instance, Settings.Timeout[i], RAW);         // Try connect to LXI
       }
+
 
       if (Settings.device[i]<0)
       {
@@ -401,6 +405,18 @@ fprintf(csv_file_descriptor,"\n");
 fprintf(js_file_descriptor,"  ];                                          \n");
 fclose(js_file_descriptor);
 
+for(i = 0; i < channel_count; ++i)if(Settings.device[i]>=0)
+{
+  if(Settings.display_state==0){
+     lxi_send(Settings.device[i], Settings.Display_off_command[i], strlen(Settings.Display_off_command[i]), Settings.Timeout[i]);  // Send SCPI commnd
+     wprintw(log_win,"%s send init: %s\n", Settings.Device_name[i],Settings.Display_off_command[i]);
+  }else{
+     lxi_send(Settings.device[i], Settings.Display_on_command[i], strlen(Settings.Display_on_command[i]), Settings.Timeout[i]);  // Send SCPI commnd
+     wprintw(log_win,"%s send init: %s\n", Settings.Device_name[i],Settings.Display_on_command[i]);
+  }
+}
+wrefresh(log_win);
+
 // -------------------------------------------------------------
 
 
@@ -425,6 +441,26 @@ while(exit_code==0)
 
       exit_code++;
       break;
+
+    case 'd':
+
+      if(Settings.display_state==0){
+         Settings.display_state=1;
+      }else{
+         Settings.display_state=0;
+      }
+
+      for(i = 0; i < channel_count; ++i)if(Settings.device[i]>=0)
+      {
+          if(Settings.display_state==0){
+             lxi_send(Settings.device[i], Settings.Display_on_command[i], strlen(Settings.Display_on_command[i]), Settings.Timeout[i]);  // Send SCPI commnd
+          }else{
+             lxi_send(Settings.device[i], Settings.Display_off_command[i], strlen(Settings.Display_off_command[i]), Settings.Timeout[i]);  // Send SCPI commnd
+          }
+      }
+
+      break;
+
 
     case ' ':
       while(getch() != ' ')sleep(1);

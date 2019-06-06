@@ -30,12 +30,15 @@ typedef struct
     const char *Device_name[MAX_CHANNELS];
     const char *IP[MAX_CHANNELS];
     const char *Read_command[MAX_CHANNELS];
+    const char *Display_on_command[MAX_CHANNELS];
+    const char *Display_off_command[MAX_CHANNELS];
     const char *Exit_command[MAX_CHANNELS];
     pthread_t tid[MAX_CHANNELS];
     int screen_timeout;
     const char *csv_dots;
     const char *csv_delimeter;
     int syncfs;
+    int display_state;
 } SettingsDef;
 
 typedef struct

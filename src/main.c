@@ -8,6 +8,7 @@ time_t rawtime;
 struct tm * timeinfo;
 char time_buffer [80];
 int tspan_count = 0;
+char lxi_command_to_send[255];
 
 
 void* measurement_thread(void *arg)
@@ -16,9 +17,11 @@ void* measurement_thread(void *arg)
     int myid = (int)((intptr_t)arg); 
     unsigned long i = 0;
     char response[RESPONSE_LEN];
+    char lxi_command_to_send_thread[255];
 
-
-	lxi_send(Settings.device[myid], Settings.Read_command[myid], strlen(Settings.Read_command[myid]), Settings.Timeout[myid]);  // Send SCPI commnd
+	strcpy(lxi_command_to_send_thread, Settings.Read_command[myid]);
+	if(Settings.Protocol[myid]==0) strcat(lxi_command_to_send_thread, "\n");
+	lxi_send(Settings.device[myid], lxi_command_to_send_thread, strlen(lxi_command_to_send_thread), Settings.Timeout[myid]);  // Send SCPI commnd
 	lxi_receive(Settings.device[myid], response, sizeof(response), Settings.Timeout[myid]);  // Wait for response
 
         while (strchr("\t\n\v\f\r ", response[i]) == NULL)
@@ -340,10 +343,10 @@ int main(int argc, char **argv)
 
       /* Выводим только те записи, если они имеют все нужные поля. */
       const char *init_single, *Instance;
-      int Port, Protocol;
+      int Port;
       if(!(config_setting_lookup_string(channels, "device_name", &Settings.Device_name[i])
            && config_setting_lookup_string(channels, "IP", &Settings.IP[i])
-           && config_setting_lookup_int(channels, "Protocol", &Protocol)
+           && config_setting_lookup_int(channels, "Protocol", &Settings.Protocol[i])
            && config_setting_lookup_string(channels, "Instance", &Instance)
            && config_setting_lookup_int(channels, "Port", &Port)
            && config_setting_lookup_int(channels, "Timeout", &Settings.Timeout[i])
@@ -363,10 +366,9 @@ int main(int argc, char **argv)
 //      fprintf(csv_file_descriptor,"%-7i %-20s %-15s\n",  i, device_name, IP);
       wrefresh(channels_win);
 
-      if(Protocol==1)
+      if(Settings.Protocol[i]==1)
       {
          Settings.device[i] = lxi_connect(Settings.IP[i], Port, Instance, Settings.Timeout[i], VXI11);       // Try connect to LXI
-
       } else {
          Settings.device[i] = lxi_connect(Settings.IP[i], Port, Instance, Settings.Timeout[i], RAW);         // Try connect to LXI
       }
@@ -391,7 +393,9 @@ int main(int argc, char **argv)
                 }
                 init_single = config_setting_get_string_elem(init_commands, k);
 
-		lxi_send(Settings.device[i], init_single, strlen(init_single), Settings.Timeout[i]);  // Send SCPI commnd
+		strcpy(lxi_command_to_send, init_single);
+		if(Settings.Protocol[i]==0) strcat(lxi_command_to_send, "\n");
+		lxi_send(Settings.device[i], lxi_command_to_send, strlen(lxi_command_to_send), Settings.Timeout[i]);  // Send SCPI commnd
 		wprintw(log_win,"%s send init: %s\n", Settings.Device_name[i],init_single);
 	        wrefresh(log_win);
 
@@ -408,10 +412,15 @@ fclose(js_file_descriptor);
 for(i = 0; i < channel_count; ++i)if(Settings.device[i]>=0)
 {
   if(Settings.display_state==0){
-     lxi_send(Settings.device[i], Settings.Display_off_command[i], strlen(Settings.Display_off_command[i]), Settings.Timeout[i]);  // Send SCPI commnd
+     strcpy(lxi_command_to_send, Settings.Display_off_command[i]);
+     if(Settings.Protocol[i]==0) strcat(lxi_command_to_send, "\n");
+     lxi_send(Settings.device[i], lxi_command_to_send, strlen(lxi_command_to_send), Settings.Timeout[i]);  // Send SCPI commnd
      wprintw(log_win,"%s send init: %s\n", Settings.Device_name[i],Settings.Display_off_command[i]);
   }else{
-     lxi_send(Settings.device[i], Settings.Display_on_command[i], strlen(Settings.Display_on_command[i]), Settings.Timeout[i]);  // Send SCPI commnd
+
+     strcpy(lxi_command_to_send, Settings.Display_on_command[i]);
+     if(Settings.Protocol[i]==0) strcat(lxi_command_to_send, "\n");
+     lxi_send(Settings.device[i], lxi_command_to_send, strlen(lxi_command_to_send), Settings.Timeout[i]);  // Send SCPI commnd
      wprintw(log_win,"%s send init: %s\n", Settings.Device_name[i],Settings.Display_on_command[i]);
   }
 }
@@ -436,7 +445,9 @@ while(exit_code==0)
 
       for(i = 0; i < channel_count; ++i)if(Settings.device[i]>=0)
       {
-          lxi_send(Settings.device[i], Settings.Exit_command[i], strlen(Settings.Exit_command[i]), Settings.Timeout[i]);  // Send SCPI commnd
+          strcpy(lxi_command_to_send, Settings.Exit_command[i]);
+          if(Settings.Protocol[i]==0) strcat(lxi_command_to_send, "\n");
+          lxi_send(Settings.device[i], lxi_command_to_send, strlen(lxi_command_to_send), Settings.Timeout[i]);  // Send SCPI commnd
       }
 
       exit_code++;
@@ -454,13 +465,18 @@ while(exit_code==0)
     
       for(i = 0; i < channel_count; ++i)if(Settings.device[i]>=0)
       {
-         if(Settings.display_state==0){
-            lxi_send(Settings.device[i], Settings.Display_off_command[i], strlen(Settings.Display_off_command[i]), Settings.Timeout[i]);  // Send SCPI commnd
-            wprintw(log_win,"%s send init: %s\n", Settings.Device_name[i],Settings.Display_off_command[i]);
-         }else{
-            lxi_send(Settings.device[i], Settings.Display_on_command[i], strlen(Settings.Display_on_command[i]), Settings.Timeout[i]);  // Send SCPI commnd
-            wprintw(log_win,"%s send init: %s\n", Settings.Device_name[i],Settings.Display_on_command[i]);
-         }
+
+        if(Settings.display_state==0){
+           strcpy(lxi_command_to_send, Settings.Display_off_command[i]);
+           if(Settings.Protocol[i]==0) strcat(lxi_command_to_send, "\n");
+           lxi_send(Settings.device[i], lxi_command_to_send, strlen(lxi_command_to_send), Settings.Timeout[i]);  // Send SCPI commnd
+           wprintw(log_win,"%s send init: %s\n", Settings.Device_name[i],Settings.Display_off_command[i]);
+        }else{
+           strcpy(lxi_command_to_send, Settings.Display_on_command[i]);
+           if(Settings.Protocol[i]==0) strcat(lxi_command_to_send, "\n");
+           lxi_send(Settings.device[i], lxi_command_to_send, strlen(lxi_command_to_send), Settings.Timeout[i]);  // Send SCPI commnd
+           wprintw(log_win,"%s send init: %s\n", Settings.Device_name[i],Settings.Display_on_command[i]);
+        }
       }
       wrefresh(log_win);
 

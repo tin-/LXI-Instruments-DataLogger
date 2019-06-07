@@ -38,6 +38,7 @@ typedef struct
     const char *csv_dots;
     const char *csv_delimeter;
     int syncfs;
+    int Protocol[MAX_CHANNELS];
     int display_state;
 } SettingsDef;
 

@@ -33,12 +33,19 @@ typedef struct
     const char *Display_on_command[MAX_CHANNELS];
     const char *Display_off_command[MAX_CHANNELS];
     const char *Exit_command[MAX_CHANNELS];
+    const char *Instance[MAX_CHANNELS];
+    int Protocol[MAX_CHANNELS];
+    int Port[MAX_CHANNELS];
     pthread_t tid[MAX_CHANNELS];
+} ChannelsDef;
+
+
+typedef struct
+{
     int screen_timeout;
     const char *csv_dots;
     const char *csv_delimeter;
     int syncfs;
-    int Protocol[MAX_CHANNELS];
     int display_state;
 } SettingsDef;
 

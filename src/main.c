@@ -2,6 +2,7 @@
 #include <features.h>
 
 SettingsDef Settings;
+ChannelsDef Channels;
 temp_sensorsDef temperature_sensors[4];
 const char *i2c_file_name;
 time_t rawtime;
@@ -14,15 +15,16 @@ char lxi_command_to_send[255];
 void* measurement_thread(void *arg)
 {
     extern SettingsDef Settings;
+    extern ChannelsDef Channels;
     int myid = (int)((intptr_t)arg); 
     unsigned long i = 0;
     char response[RESPONSE_LEN];
     char lxi_command_to_send_thread[255];
 
-	strcpy(lxi_command_to_send_thread, Settings.Read_command[myid]);
-	if(Settings.Protocol[myid]==0) strcat(lxi_command_to_send_thread, "\n");
-	lxi_send(Settings.device[myid], lxi_command_to_send_thread, strlen(lxi_command_to_send_thread), Settings.Timeout[myid]);  // Send SCPI commnd
-	lxi_receive(Settings.device[myid], response, sizeof(response), Settings.Timeout[myid]);  // Wait for response
+	strcpy(lxi_command_to_send_thread, Channels.Read_command[myid]);
+	if(Channels.Protocol[myid]==0) strcat(lxi_command_to_send_thread, "\n");
+	lxi_send(Channels.device[myid], lxi_command_to_send_thread, strlen(lxi_command_to_send_thread), Channels.Timeout[myid]);  // Send SCPI commnd
+	lxi_receive(Channels.device[myid], response, sizeof(response), Channels.Timeout[myid]);  // Wait for response
 
         while (strchr("\t\n\v\f\r ", response[i]) == NULL)
 	{
@@ -342,45 +344,43 @@ int main(int argc, char **argv)
       config_setting_t *channels = config_setting_get_elem(setting, i);
 
       /* Выводим только те записи, если они имеют все нужные поля. */
-      const char *init_single, *Instance;
-      int Port;
-      if(!(config_setting_lookup_string(channels, "device_name", &Settings.Device_name[i])
-           && config_setting_lookup_string(channels, "IP", &Settings.IP[i])
-           && config_setting_lookup_int(channels, "Protocol", &Settings.Protocol[i])
-           && config_setting_lookup_string(channels, "Instance", &Instance)
-           && config_setting_lookup_int(channels, "Port", &Port)
-           && config_setting_lookup_int(channels, "Timeout", &Settings.Timeout[i])
-           && config_setting_lookup_string(channels, "Read_command", &Settings.Read_command[i])
+      const char *init_single;
+      if(!(config_setting_lookup_string(channels, "device_name", &Channels.Device_name[i])
+           && config_setting_lookup_string(channels, "IP", &Channels.IP[i])
+           && config_setting_lookup_int(channels, "Protocol", &Channels.Protocol[i])
+           && config_setting_lookup_string(channels, "Instance", &Channels.Instance[i])
+           && config_setting_lookup_int(channels, "Port", &Channels.Port[i])
+           && config_setting_lookup_int(channels, "Timeout", &Channels.Timeout[i])
+           && config_setting_lookup_string(channels, "Read_command", &Channels.Read_command[i])
          )) 
         continue;
 
-      if(!config_setting_lookup_string(channels, "Exit_command",        &Settings.Exit_command[i]))Settings.Exit_command[i]="";
-      if(!config_setting_lookup_string(channels, "Display_on_command",  &Settings.Display_on_command[i]))Settings.Display_on_command[i]="";
-      if(!config_setting_lookup_string(channels, "Display_off_command", &Settings.Display_off_command[i]))Settings.Display_off_command[i]="";
+      if(!config_setting_lookup_string(channels, "Exit_command",        &Channels.Exit_command[i]))Channels.Exit_command[i]="";
+      if(!config_setting_lookup_string(channels, "Display_on_command",  &Channels.Display_on_command[i]))Channels.Display_on_command[i]="";
+      if(!config_setting_lookup_string(channels, "Display_off_command", &Channels.Display_off_command[i]))Channels.Display_off_command[i]="";
 
       fprintf(csv_file_descriptor,"val%i%s", i+1, Settings.csv_delimeter);
-      fprintf(js_file_descriptor,"    {\"curveTitle\":\"%s\",		\"channel\":\"ch%i\",	\"offset\":0,		\"scale\":1,	\"group\":0,	\"tspan\":0,	\"axis_is_ppm\":0}, \n",Settings.Device_name[i],i+1);
+      fprintf(js_file_descriptor,"    {\"curveTitle\":\"%s\",		\"channel\":\"ch%i\",	\"offset\":0,		\"scale\":1,	\"group\":0,	\"tspan\":0,	\"axis_is_ppm\":0}, \n",Channels.Device_name[i],i+1);
 
       wmove(channels_win, i+2, 1);
-      wprintw(channels_win,"%-7i %-20s %-15s", i, Settings.Device_name[i], Settings.IP[i]);
-//      fprintf(csv_file_descriptor,"%-7i %-20s %-15s\n",  i, device_name, IP);
+      wprintw(channels_win,"%-7i %-20s %-15s", i, Channels.Device_name[i], Channels.IP[i]);
       wrefresh(channels_win);
 
-      if(Settings.Protocol[i]==1)
+      if(Channels.Protocol[i]==1)
       {
-         Settings.device[i] = lxi_connect(Settings.IP[i], Port, Instance, Settings.Timeout[i], VXI11);       // Try connect to LXI
+         Channels.device[i] = lxi_connect(Channels.IP[i], Channels.Port[i], Channels.Instance[i], Channels.Timeout[i], VXI11);       // Try connect to LXI
       } else {
-         Settings.device[i] = lxi_connect(Settings.IP[i], Port, Instance, Settings.Timeout[i], RAW);         // Try connect to LXI
+         Channels.device[i] = lxi_connect(Channels.IP[i], Channels.Port[i], Channels.Instance[i], Channels.Timeout[i], RAW);         // Try connect to LXI
       }
 
 
-      if (Settings.device[i]<0)
+      if (Channels.device[i]<0)
       {
 
         wmove(channels_win, i+2, 46);
 	wprintw(channels_win,"Connection failed!");
         wrefresh(channels_win);
-        wprintw(log_win,"Can't connect to %s\n", Settings.Device_name[i]);
+        wprintw(log_win,"Can't connect to %s\n", Channels.Device_name[i]);
       } else 
       {
         // Send init commands to instruments
@@ -394,9 +394,9 @@ int main(int argc, char **argv)
                 init_single = config_setting_get_string_elem(init_commands, k);
 
 		strcpy(lxi_command_to_send, init_single);
-		if(Settings.Protocol[i]==0) strcat(lxi_command_to_send, "\n");
-		lxi_send(Settings.device[i], lxi_command_to_send, strlen(lxi_command_to_send), Settings.Timeout[i]);  // Send SCPI commnd
-		wprintw(log_win,"%s send init: %s\n", Settings.Device_name[i],init_single);
+		if(Channels.Protocol[i]==0) strcat(lxi_command_to_send, "\n");
+		lxi_send(Channels.device[i], lxi_command_to_send, strlen(lxi_command_to_send), Channels.Timeout[i]);  // Send SCPI commnd
+		wprintw(log_win,"%s send init: %s\n", Channels.Device_name[i],init_single);
 	        wrefresh(log_win);
 
                 ++k;
@@ -409,19 +409,19 @@ fprintf(csv_file_descriptor,"\n");
 fprintf(js_file_descriptor,"  ];                                          \n");
 fclose(js_file_descriptor);
 
-for(i = 0; i < channel_count; ++i)if(Settings.device[i]>=0)
+for(i = 0; i < channel_count; ++i)if(Channels.device[i]>=0)
 {
   if(Settings.display_state==0){
-     strcpy(lxi_command_to_send, Settings.Display_off_command[i]);
-     if(Settings.Protocol[i]==0) strcat(lxi_command_to_send, "\n");
-     lxi_send(Settings.device[i], lxi_command_to_send, strlen(lxi_command_to_send), Settings.Timeout[i]);  // Send SCPI commnd
-     wprintw(log_win,"%s send init: %s\n", Settings.Device_name[i],Settings.Display_off_command[i]);
+     strcpy(lxi_command_to_send, Channels.Display_off_command[i]);
+     if(Channels.Protocol[i]==0) strcat(lxi_command_to_send, "\n");
+     lxi_send(Channels.device[i], lxi_command_to_send, strlen(lxi_command_to_send), Channels.Timeout[i]);  // Send SCPI commnd
+     wprintw(log_win,"%s send init: %s\n", Channels.Device_name[i],Channels.Display_off_command[i]);
   }else{
 
-     strcpy(lxi_command_to_send, Settings.Display_on_command[i]);
-     if(Settings.Protocol[i]==0) strcat(lxi_command_to_send, "\n");
-     lxi_send(Settings.device[i], lxi_command_to_send, strlen(lxi_command_to_send), Settings.Timeout[i]);  // Send SCPI commnd
-     wprintw(log_win,"%s send init: %s\n", Settings.Device_name[i],Settings.Display_on_command[i]);
+     strcpy(lxi_command_to_send, Channels.Display_on_command[i]);
+     if(Channels.Protocol[i]==0) strcat(lxi_command_to_send, "\n");
+     lxi_send(Channels.device[i], lxi_command_to_send, strlen(lxi_command_to_send), Channels.Timeout[i]);  // Send SCPI commnd
+     wprintw(log_win,"%s send init: %s\n", Channels.Device_name[i],Channels.Display_on_command[i]);
   }
 }
 wrefresh(log_win);
@@ -443,11 +443,11 @@ while(exit_code==0)
   {
     case 'q':
 
-      for(i = 0; i < channel_count; ++i)if(Settings.device[i]>=0)
+      for(i = 0; i < channel_count; ++i)if(Channels.device[i]>=0)
       {
-          strcpy(lxi_command_to_send, Settings.Exit_command[i]);
-          if(Settings.Protocol[i]==0) strcat(lxi_command_to_send, "\n");
-          lxi_send(Settings.device[i], lxi_command_to_send, strlen(lxi_command_to_send), Settings.Timeout[i]);  // Send SCPI commnd
+          strcpy(lxi_command_to_send, Channels.Exit_command[i]);
+          if(Channels.Protocol[i]==0) strcat(lxi_command_to_send, "\n");
+          lxi_send(Channels.device[i], lxi_command_to_send, strlen(lxi_command_to_send), Channels.Timeout[i]);  // Send SCPI commnd
       }
 
       exit_code++;
@@ -463,19 +463,19 @@ while(exit_code==0)
 
       wprintw(log_win,"\n");
     
-      for(i = 0; i < channel_count; ++i)if(Settings.device[i]>=0)
+      for(i = 0; i < channel_count; ++i)if(Channels.device[i]>=0)
       {
 
         if(Settings.display_state==0){
-           strcpy(lxi_command_to_send, Settings.Display_off_command[i]);
-           if(Settings.Protocol[i]==0) strcat(lxi_command_to_send, "\n");
-           lxi_send(Settings.device[i], lxi_command_to_send, strlen(lxi_command_to_send), Settings.Timeout[i]);  // Send SCPI commnd
-           wprintw(log_win,"%s send init: %s\n", Settings.Device_name[i],Settings.Display_off_command[i]);
+           strcpy(lxi_command_to_send, Channels.Display_off_command[i]);
+           if(Channels.Protocol[i]==0) strcat(lxi_command_to_send, "\n");
+           lxi_send(Channels.device[i], lxi_command_to_send, strlen(lxi_command_to_send), Channels.Timeout[i]);  // Send SCPI commnd
+           wprintw(log_win,"%s send init: %s\n", Channels.Device_name[i],Channels.Display_off_command[i]);
         }else{
-           strcpy(lxi_command_to_send, Settings.Display_on_command[i]);
-           if(Settings.Protocol[i]==0) strcat(lxi_command_to_send, "\n");
-           lxi_send(Settings.device[i], lxi_command_to_send, strlen(lxi_command_to_send), Settings.Timeout[i]);  // Send SCPI commnd
-           wprintw(log_win,"%s send init: %s\n", Settings.Device_name[i],Settings.Display_on_command[i]);
+           strcpy(lxi_command_to_send, Channels.Display_on_command[i]);
+           if(Channels.Protocol[i]==0) strcat(lxi_command_to_send, "\n");
+           lxi_send(Channels.device[i], lxi_command_to_send, strlen(lxi_command_to_send), Channels.Timeout[i]);  // Send SCPI commnd
+           wprintw(log_win,"%s send init: %s\n", Channels.Device_name[i],Channels.Display_on_command[i]);
         }
       }
       wrefresh(log_win);
@@ -507,7 +507,7 @@ while(exit_code==0)
 
   for(i = 0; i < channel_count; ++i) // Start threads
   {
-     if(Settings.device[i]>=0) { 
+     if(Channels.device[i]>=0) { 
                          pthread_create(&(tid[i]), NULL, measurement_thread,  (void*)((intptr_t)i));  // запуск LXI измерения
                       } else 
                       {
@@ -518,7 +518,7 @@ while(exit_code==0)
 
   for(i = 0; i < channel_count; ++i) // Wait threads complete
   {
-     if(Settings.device[i]>=0)
+     if(Channels.device[i]>=0)
      { 
           status = pthread_join(tid[i], (void**)&status_addr);
           if (status != SUCCESS) {
@@ -588,7 +588,7 @@ while(exit_code==0)
   // Draw measure
   for(i = 0; i < channel_count; ++i)
   {
-    if(Settings.device[i]>=0)mvwprintw(channels_win, i+2, 46,"%-15s", response_massive[i]); // Print response
+    if(Channels.device[i]>=0)mvwprintw(channels_win, i+2, 46,"%-15s", response_massive[i]); // Print response
     wprintw(log_win,"%-20s", response_massive[i]);
     fprintf(csv_file_descriptor,"%s%s", response_massive[i],Settings.csv_delimeter);
 
@@ -616,12 +616,12 @@ while(exit_code==0)
 ////////////////////////////////////////////////////////////////////////////////
   for(i = 0; i < channel_count; ++i) // закрытие потоков и инструментов
   {
-     if(Settings.device[i]>=0)
+     if(Channels.device[i]>=0)
      { 
-          printw("Close: i=%i device=%i tid=%i\n", i, Settings.device[i], tid[i]);
+          printw("Close: i=%i device=%i tid=%i\n", i, Channels.device[i], tid[i]);
           status = pthread_join(tid[i], NULL);
           printw("Closed!\n");
-          lxi_disconnect(Settings.device[i]);
+          lxi_disconnect(Channels.device[i]);
      }
   }
 

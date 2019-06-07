@@ -34,6 +34,7 @@ typedef struct
     const char *Display_off_command[MAX_CHANNELS];
     const char *Exit_command[MAX_CHANNELS];
     const char *Instance[MAX_CHANNELS];
+    const char *Init_commands[MAX_CHANNELS][255];
     int Protocol[MAX_CHANNELS];
     int Port[MAX_CHANNELS];
     pthread_t tid[MAX_CHANNELS];
@@ -43,6 +44,7 @@ typedef struct
 typedef struct
 {
     int screen_timeout;
+    int lxi_connect_timeout;
     const char *csv_dots;
     const char *csv_delimeter;
     int syncfs;
@@ -57,7 +59,6 @@ typedef struct
     float temperature;
 } temp_sensorsDef;
 
-pthread_t tid[MAX_CHANNELS];
 uint64_t sample_num = 0;
 int term_x,term_y;
 char response_massive[MAX_CHANNELS][RESPONSE_LEN];

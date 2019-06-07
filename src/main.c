@@ -1,6 +1,8 @@
 #include "main.h"
 #include <features.h>
 
+FILE *csv_file_descriptor, *js_file_descriptor;
+
 SettingsDef Settings;
 ChannelsDef Channels;
 temp_sensorsDef temperature_sensors[4];
@@ -10,8 +12,13 @@ struct tm * timeinfo;
 char time_buffer [80];
 int tspan_count = 0;
 char lxi_command_to_send[255];
+int channel_count = 0;
+config_t cfg; 
+config_setting_t *setting, *init_commands, *setting_temp;
+int exit_code=0;
+int channel_count_temp=0;
 
-
+// ---------------------------------------------------------------------------------------------------
 void* measurement_thread(void *arg)
 {
     extern SettingsDef Settings;
@@ -35,14 +42,13 @@ void* measurement_thread(void *arg)
         response[i] = '\0';
 	response_massive[myid][i] = '\0';
 
-
     return NULL;
 }
-
-
 // ---------------------------------------------------------------------------------------------------
 
 
+
+// ---------------------------------------------------------------------------------------------------
 void i2c_write(char i2c_dev_addr, char register_pointer, char data_MSB, char data_LSB)
 {
     int ret;
@@ -76,10 +82,10 @@ void i2c_write(char i2c_dev_addr, char register_pointer, char data_MSB, char dat
 
     return;
 }
-
 // ---------------------------------------------------------------------------------------------------
 
 
+// ---------------------------------------------------------------------------------------------------
 int16_t i2c_read_temp(char i2c_dev_addr, char addr)
 {
     int ret;
@@ -89,7 +95,6 @@ int16_t i2c_read_temp(char i2c_dev_addr, char addr)
 	.msgs = msg,
 	.nmsgs = 2,
     };
-
 
     if (i2c_dev_addr < 0 || i2c_dev_addr > 255) {
 	fprintf(stderr, "i2c: Invalid I2C address. \n");
@@ -101,8 +106,6 @@ int16_t i2c_read_temp(char i2c_dev_addr, char addr)
 	perror("i2c: Failed to set i2c device address");
 	return 0;
     }
-
-
 
     msg[0].addr = i2c_dev_addr;
     msg[0].flags = 0;
@@ -118,11 +121,11 @@ int16_t i2c_read_temp(char i2c_dev_addr, char addr)
 
     return (data[0]<<8) + data[1];
 }
-
-
 // ---------------------------------------------------------------------------------------------------
 
 
+
+// ---------------------------------------------------------------------------------------------------
 void configure_tmp117(int addr, int config)
 {
     char config1=(config >> 8) & 0xFF;
@@ -137,11 +140,12 @@ void configure_tmp117(int addr, int config)
 
     close(i2c_fd);
 }
-
-
 // ---------------------------------------------------------------------------------------------------
 
 
+
+
+// ---------------------------------------------------------------------------------------------------
 void read_temp(int chan, int addr)
 {
     float result;
@@ -162,42 +166,30 @@ void read_temp(int chan, int addr)
     if ( result > -256 ) 
     {
        temperature_sensors[chan].temperature=result;
-//	printf( "Temp: 0x%x is: %.3f   ",addr, result );
     }
-
 }
-
+// ---------------------------------------------------------------------------------------------------
 
 
 
 // ---------------------------------------------------------------------------------------------------
-
-int main(int argc, char **argv)
+void init_config()
 {
-  config_t cfg; 
-  config_setting_t *setting, *init_commands, *setting_temp;
-  int i,k,exit_code=0;
-  int status_addr,status;
-  struct timespec start, stop;
-  double accum;
-  time_t tdate = time(NULL);
   const char *csv_dir;
-  char time_in_char[32],temp_in_char[32];
+  char time_in_char[32];
+  time_t tdate = time(NULL);
   char csv_file_name[512];
-  int time_in_char_pos=0,temp_in_char_pos=0;
+  int i,k;
 
-
-  lxi_init(); // Initialize LXI library
-
-  // Initialize Libconfig library -------------------------------
   config_init(&cfg); // Initialize Libconfig library
 
-  if(! config_read_file(&cfg, "lxiidl.cfg"))
+  if(!config_read_file(&cfg, "lxiidl.cfg"))
   {
     fprintf(stderr, "%s:%d - %s\n", config_error_file(&cfg),
             config_error_line(&cfg), config_error_text(&cfg));
     config_destroy(&cfg);
-    return(EXIT_FAILURE);
+    exit_code++;
+    return;
   }
 
 
@@ -213,18 +205,19 @@ int main(int argc, char **argv)
   strcat(csv_file_name, time_in_char);
   strcat(csv_file_name, ".csv");
 
-
-  FILE *csv_file_descriptor = fopen(csv_file_name,"w");
+  csv_file_descriptor = fopen(csv_file_name,"w");
   if(csv_file_descriptor == NULL) {
     printf("\n Error trying to open 'csv' file. %s",csv_file_name);
-    return 1;
+    exit_code++;
+    return;
   }
 
   strcat(csv_file_name, ".js");
-  FILE *js_file_descriptor = fopen(csv_file_name,"w");
+  js_file_descriptor = fopen(csv_file_name,"w");
   if(js_file_descriptor == NULL) {
     printf("\n Error trying to open 'csv.js' file. %s",csv_file_name);
-    return 1;
+    exit_code++;
+    return;
   }
 
 
@@ -244,13 +237,14 @@ int main(int argc, char **argv)
   if(!config_lookup_int(&cfg,    "screen_refresh_div", &Settings.screen_timeout))Settings.screen_timeout=1;
   if(!config_lookup_int(&cfg,    "syncfs",             &Settings.syncfs))        Settings.syncfs=0;
   if(!config_lookup_int(&cfg,    "display_state",      &Settings.display_state)) Settings.display_state=1;
+  if(!config_lookup_int(&cfg,    "LXI_connect_timeout",&Settings.lxi_connect_timeout)) Settings.lxi_connect_timeout=10000;
 
   fprintf(csv_file_descriptor,"sample%sdate%stime%s", Settings.csv_delimeter, Settings.csv_delimeter, Settings.csv_delimeter);
 
 
   // Load tmp117 config -----------------------------------------
   setting_temp = config_lookup(&cfg, "inventory.tmp117_temperature");
-  int channel_count_temp = config_setting_length(setting_temp);
+  channel_count_temp = config_setting_length(setting_temp);
 
 
   if(setting_temp != NULL)
@@ -286,8 +280,80 @@ int main(int argc, char **argv)
     }
 
   }
-  // -------------------------------------------------------------
 
+  setting = config_lookup(&cfg, "inventory.channels");
+  channel_count = config_setting_length(setting);
+
+
+  // Read settings -----------------------------------------------
+  if(setting != NULL)
+  {
+    for(i = 0; i < channel_count; ++i)
+    {
+      config_setting_t *channels = config_setting_get_elem(setting, i);
+
+      /* Выводим только те записи, если они имеют все нужные поля. */
+      if(!(config_setting_lookup_string(channels, "device_name", &Channels.Device_name[i])
+           && config_setting_lookup_string(channels, "IP", &Channels.IP[i])
+           && config_setting_lookup_int(channels, "Protocol", &Channels.Protocol[i])
+           && config_setting_lookup_string(channels, "Instance", &Channels.Instance[i])
+           && config_setting_lookup_int(channels, "Port", &Channels.Port[i])
+           && config_setting_lookup_int(channels, "Timeout", &Channels.Timeout[i])
+           && config_setting_lookup_string(channels, "Read_command", &Channels.Read_command[i])
+         )) 
+        continue;
+
+      if(!config_setting_lookup_string(channels, "Exit_command",        &Channels.Exit_command[i]))Channels.Exit_command[i]="";
+      if(!config_setting_lookup_string(channels, "Display_on_command",  &Channels.Display_on_command[i]))Channels.Display_on_command[i]="";
+      if(!config_setting_lookup_string(channels, "Display_off_command", &Channels.Display_off_command[i]))Channels.Display_off_command[i]="";
+
+      fprintf(csv_file_descriptor,"val%i%s", i+1, Settings.csv_delimeter);
+      fprintf(js_file_descriptor,"    {\"curveTitle\":\"%s\",		\"channel\":\"ch%i\",	\"offset\":0,		\"scale\":1,	\"group\":0,	\"tspan\":0,	\"axis_is_ppm\":0}, \n",Channels.Device_name[i],i+1);
+
+      // LXI Connect and init devices
+      if(Channels.Protocol[i]==1)
+      {
+         Channels.device[i] = lxi_connect(Channels.IP[i], Channels.Port[i], Channels.Instance[i], Settings.lxi_connect_timeout, VXI11);       // Try connect to LXI
+      } else {
+         Channels.device[i] = lxi_connect(Channels.IP[i], Channels.Port[i], Channels.Instance[i], Settings.lxi_connect_timeout, RAW);         // Try connect to LXI
+      }
+
+      if (!(Channels.device[i]<0))
+      { 
+        init_commands = config_setting_get_member(channels, "Init_string");
+        k = 0;
+        if (init_commands) {
+            while (1) {
+                if (config_setting_get_elem(init_commands, k) == NULL){
+		    Channels.Init_commands[i][k]="";
+		    break;
+		}
+                Channels.Init_commands[i][k] = config_setting_get_string_elem(init_commands, k);
+                k++;
+            }
+        }
+      }
+    }
+  }
+
+}
+// ---------------------------------------------------------------------------------------------------
+
+
+
+
+// ---------------------------------------------------------------------------------------------------
+int main(int argc, char **argv)
+{
+  int i,k;
+  int status_addr,status;
+  struct timespec start, stop;
+  double accum;
+  char time_in_char[32],temp_in_char[32];
+  int time_in_char_pos=0,temp_in_char_pos=0;
+
+  lxi_init(); // Initialize LXI library
+  init_config();
 
   // Initialize Ncurses ------------------------------------------
   setlocale(LC_ALL, "");
@@ -308,8 +374,6 @@ int main(int argc, char **argv)
 
   getmaxyx(stdscr, term_y, term_x);
 
-  setting = config_lookup(&cfg, "inventory.channels");
-  int channel_count = config_setting_length(setting);
 
   channels_win = newwin(channel_count+3, 65, 0, 0);
   wattron(channels_win,COLOR_PAIR(2));
@@ -341,74 +405,43 @@ int main(int argc, char **argv)
 
     for(i = 0; i < channel_count; ++i)
     {
-      config_setting_t *channels = config_setting_get_elem(setting, i);
-
-      /* Выводим только те записи, если они имеют все нужные поля. */
-      const char *init_single;
-      if(!(config_setting_lookup_string(channels, "device_name", &Channels.Device_name[i])
-           && config_setting_lookup_string(channels, "IP", &Channels.IP[i])
-           && config_setting_lookup_int(channels, "Protocol", &Channels.Protocol[i])
-           && config_setting_lookup_string(channels, "Instance", &Channels.Instance[i])
-           && config_setting_lookup_int(channels, "Port", &Channels.Port[i])
-           && config_setting_lookup_int(channels, "Timeout", &Channels.Timeout[i])
-           && config_setting_lookup_string(channels, "Read_command", &Channels.Read_command[i])
-         )) 
-        continue;
-
-      if(!config_setting_lookup_string(channels, "Exit_command",        &Channels.Exit_command[i]))Channels.Exit_command[i]="";
-      if(!config_setting_lookup_string(channels, "Display_on_command",  &Channels.Display_on_command[i]))Channels.Display_on_command[i]="";
-      if(!config_setting_lookup_string(channels, "Display_off_command", &Channels.Display_off_command[i]))Channels.Display_off_command[i]="";
-
-      fprintf(csv_file_descriptor,"val%i%s", i+1, Settings.csv_delimeter);
-      fprintf(js_file_descriptor,"    {\"curveTitle\":\"%s\",		\"channel\":\"ch%i\",	\"offset\":0,		\"scale\":1,	\"group\":0,	\"tspan\":0,	\"axis_is_ppm\":0}, \n",Channels.Device_name[i],i+1);
-
       wmove(channels_win, i+2, 1);
       wprintw(channels_win,"%-7i %-20s %-15s", i, Channels.Device_name[i], Channels.IP[i]);
       wrefresh(channels_win);
 
-      if(Channels.Protocol[i]==1)
-      {
-         Channels.device[i] = lxi_connect(Channels.IP[i], Channels.Port[i], Channels.Instance[i], Channels.Timeout[i], VXI11);       // Try connect to LXI
-      } else {
-         Channels.device[i] = lxi_connect(Channels.IP[i], Channels.Port[i], Channels.Instance[i], Channels.Timeout[i], RAW);         // Try connect to LXI
-      }
-
-
       if (Channels.device[i]<0)
       {
-
         wmove(channels_win, i+2, 46);
 	wprintw(channels_win,"Connection failed!");
         wrefresh(channels_win);
         wprintw(log_win,"Can't connect to %s\n", Channels.Device_name[i]);
-      } else 
-      {
-        // Send init commands to instruments
-        init_commands = config_setting_get_member(channels, "Init_string");
+      } 
+    }
+  }
+
+
+    for(i = 0; i < channel_count; ++i)
+    {
+      if (!(Channels.device[i]<0))
+      { // Send init commands to instruments
         k = 0;
-        if (init_commands) {
-            while (1) {
-                if (config_setting_get_elem(init_commands, k) == NULL) {
-                    break;
-                }
-                init_single = config_setting_get_string_elem(init_commands, k);
-
-		strcpy(lxi_command_to_send, init_single);
-		if(Channels.Protocol[i]==0) strcat(lxi_command_to_send, "\n");
-		lxi_send(Channels.device[i], lxi_command_to_send, strlen(lxi_command_to_send), Channels.Timeout[i]);  // Send SCPI commnd
-		wprintw(log_win,"%s send init: %s\n", Channels.Device_name[i],init_single);
-	        wrefresh(log_win);
-
-                ++k;
-            }
+        while (strlen(Channels.Init_commands[i][k])>0)
+	{
+	    strcpy(lxi_command_to_send, Channels.Init_commands[i][k]);
+	    if(Channels.Protocol[i]==0) strcat(lxi_command_to_send, "\n");
+	    lxi_send(Channels.device[i], lxi_command_to_send, strlen(lxi_command_to_send), Channels.Timeout[i]);  // Send SCPI commnd
+	    wprintw(log_win,"%s send init: %s\n", Channels.Device_name[i],Channels.Init_commands[i][k]);
+	    wrefresh(log_win);
+	    k++;
         }
       }
     }
-  }
+
 fprintf(csv_file_descriptor,"\n");
 fprintf(js_file_descriptor,"  ];                                          \n");
 fclose(js_file_descriptor);
 
+// Send display ON/OFF commands to instruments
 for(i = 0; i < channel_count; ++i)if(Channels.device[i]>=0)
 {
   if(Settings.display_state==0){
@@ -462,10 +495,10 @@ while(exit_code==0)
       }
 
       wprintw(log_win,"\n");
-    
+
       for(i = 0; i < channel_count; ++i)if(Channels.device[i]>=0)
       {
-
+        // Send display ON/OFF commands to instruments
         if(Settings.display_state==0){
            strcpy(lxi_command_to_send, Channels.Display_off_command[i]);
            if(Channels.Protocol[i]==0) strcat(lxi_command_to_send, "\n");
@@ -508,7 +541,7 @@ while(exit_code==0)
   for(i = 0; i < channel_count; ++i) // Start threads
   {
      if(Channels.device[i]>=0) { 
-                         pthread_create(&(tid[i]), NULL, measurement_thread,  (void*)((intptr_t)i));  // запуск LXI измерения
+                         pthread_create(&(Channels.tid[i]), NULL, measurement_thread,  (void*)((intptr_t)i));  // запуск LXI измерения
                       } else 
                       {
                          response_massive[i][0]='0';
@@ -520,7 +553,7 @@ while(exit_code==0)
   {
      if(Channels.device[i]>=0)
      { 
-          status = pthread_join(tid[i], (void**)&status_addr);
+          status = pthread_join(Channels.tid[i], (void**)&status_addr);
           if (status != SUCCESS) {
             wprintw(log_win,"main error: can't join thread, status = %d\n", status);
             exit(ERROR_JOIN_THREAD);
@@ -618,8 +651,8 @@ while(exit_code==0)
   {
      if(Channels.device[i]>=0)
      { 
-          printw("Close: i=%i device=%i tid=%i\n", i, Channels.device[i], tid[i]);
-          status = pthread_join(tid[i], NULL);
+          printw("Close: i=%i device=%i tid=%i\n", i, Channels.device[i], Channels.tid[i]);
+          status = pthread_join(Channels.tid[i], NULL);
           printw("Closed!\n");
           lxi_disconnect(Channels.device[i]);
      }

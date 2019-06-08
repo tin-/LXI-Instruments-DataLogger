@@ -377,8 +377,11 @@ int main(int argc, char **argv)
   wattron(channels_win,COLOR_PAIR(2));
   box(channels_win, 0, 0);
 
-  log_win = newwin(term_y-(channel_count+3)-1, term_x, channel_count+3, 0);
+  log_win = newwin(term_y-(channel_count+3)-1, term_x, channel_count+3+1, 0);
   scrollok(log_win, TRUE);
+
+  legend_win = newwin(term_y-(channel_count+3)-1-1, term_x, channel_count+3, 0);
+  scrollok(legend_win, TRUE);
 
   help_win = newwin(1, term_x, term_y-1, 0);
   wattron(help_win,COLOR_PAIR(1));
@@ -386,7 +389,24 @@ int main(int argc, char **argv)
 
   wprintw(help_win,"  SPACE - pause, q - quit, r - refresh window, d - display ON/OFF  ");
 
+  wprintw(legend_win,"sample     time     ");
+
+  for(i = 0; i < channel_count_temp; ++i)
+  {
+    if(temperature_sensors[i].i2c_address>0)
+    {
+	wprintw(legend_win,"Temp%i    ",i);
+    }
+  }
+
+  for(i = 0; i < channel_count; ++i)
+  {
+    wprintw(legend_win,"Channel%i            ",i);
+
+  }
+
   wrefresh(log_win);
+  wrefresh(legend_win);
   wrefresh(channels_win);
   wrefresh(help_win);
 
@@ -508,7 +528,8 @@ while(exit_code==0)
 
     case 'r':
       getmaxyx(stdscr, term_y, term_x);
-      wresize(log_win,term_y-(channel_count+3)-1, term_x);
+      wresize(log_win,term_y-(channel_count+3)-1-1, term_x);
+      wresize(legend_win,1, term_x);
       wresize(channels_win,channel_count+3, 65);
       mvwin(help_win,term_y-1, 0);
       wresize(help_win,1, term_x);
@@ -516,6 +537,7 @@ while(exit_code==0)
       box(channels_win, 0, 0);
       wrefresh(help_win);
       wrefresh(log_win);
+      wrefresh(legend_win);
       wrefresh(channels_win);
       break;
   }

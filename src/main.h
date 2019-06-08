@@ -67,6 +67,7 @@ char response_massive[MAX_CHANNELS][RESPONSE_LEN];
 WINDOW *log_win;
 WINDOW *channels_win;
 WINDOW *help_win;
+WINDOW *legend_win;
 
 FILE *csv_file_descriptor, *js_file_descriptor;
 

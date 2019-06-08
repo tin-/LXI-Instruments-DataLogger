@@ -95,3 +95,4 @@ int16_t i2c_read_temp(char i2c_dev_addr, char addr);
 void configure_tmp117(int addr, int config);
 void read_temp(int chan, int addr);
 void init_config();
+void draw_info_win();

@@ -341,51 +341,13 @@ void init_config()
 //
 //
 // ---------------------------------------------------------------------------------------------------
-int main(int argc, char **argv)
+void draw_info_win()
 {
-  int i,k;
-  int status_addr,status;
-  struct timespec start, stop;
-  double accum;
-  char time_in_char[32],temp_in_char[32];
-  int time_in_char_pos=0,temp_in_char_pos=0;
+  int i;
 
-  lxi_init(); // Initialize LXI library
-  init_config();
-
-  // Initialize Ncurses ------------------------------------------
-  setlocale(LC_ALL, "");
-  initscr();
-  cbreak();
-  noecho();
-  nonl();
-  intrflush(stdscr, FALSE);
-  keypad(stdscr, TRUE);
-  curs_set(0);
-  scrollok(stdscr, TRUE);
-  nodelay(stdscr, TRUE);
-  refresh();
-
-  start_color();
-  init_pair(1, COLOR_BLACK, COLOR_GREEN);
-  init_pair(2, COLOR_YELLOW, COLOR_BLACK);
-
-  getmaxyx(stdscr, term_y, term_x);
-
-
-  channels_win = newwin(channel_count+3, 65, 0, 0);
-  wattron(channels_win,COLOR_PAIR(2));
-  box(channels_win, 0, 0);
-
-  log_win = newwin(term_y-(channel_count+3)-1-1, term_x, channel_count+3+1, 0);
-  scrollok(log_win, TRUE);
-
-  legend_win = newwin(term_y-(channel_count+3)-1-1, term_x, channel_count+3, 0);
-  scrollok(legend_win, TRUE);
-
-  help_win = newwin(1, term_x, term_y-1, 0);
-  wattron(help_win,COLOR_PAIR(1));
-
+  wmove(log_win, 0, 0);
+  wmove(legend_win, 0, 0);
+  wmove(help_win, 0, 0);
 
   wprintw(help_win,"  SPACE - pause, q - quit, r - refresh window, d - display ON/OFF  ");
 
@@ -436,7 +398,61 @@ int main(int argc, char **argv)
       } 
     }
   }
+}
+// ---------------------------------------------------------------------------------------------------
+//
+//
+//
+// ---------------------------------------------------------------------------------------------------
+int main(int argc, char **argv)
+{
+  int i,k;
+  int status_addr,status;
+  struct timespec start, stop;
+  double accum;
+  char time_in_char[32],temp_in_char[32];
+  int time_in_char_pos=0,temp_in_char_pos=0;
 
+  lxi_init(); // Initialize LXI library
+  init_config();
+
+  // Initialize Ncurses ------------------------------------------
+  setlocale(LC_ALL, "");
+  initscr();
+  cbreak();
+  noecho();
+  nonl();
+  intrflush(stdscr, FALSE);
+  keypad(stdscr, TRUE);
+  curs_set(0);
+  scrollok(stdscr, TRUE);
+  nodelay(stdscr, TRUE);
+  refresh();
+
+  start_color();
+  init_pair(1, COLOR_BLACK, COLOR_GREEN);
+  init_pair(2, COLOR_YELLOW, COLOR_BLACK);
+
+  getmaxyx(stdscr, term_y, term_x);
+
+
+  channels_win = newwin(channel_count+3, 65, 0, 0);
+  wattron(channels_win,COLOR_PAIR(2));
+  box(channels_win, 0, 0);
+
+  log_win = newwin(term_y-(channel_count+3)-1-1, term_x, channel_count+3+1, 0);
+  scrollok(log_win, TRUE);
+
+  legend_win = newwin(term_y-(channel_count+3)-1-1, term_x, channel_count+3, 0);
+  scrollok(legend_win, TRUE);
+
+  help_win = newwin(1, term_x, term_y-1, 0);
+  wattron(help_win,COLOR_PAIR(1));
+
+
+  wmove(log_win, 0, 0);
+
+  draw_info_win();
 
     for(i = 0; i < channel_count; ++i)
     {
@@ -533,6 +549,8 @@ while(exit_code==0)
       wresize(channels_win,channel_count+3, 65);
       mvwin(help_win,term_y-1, 0);
       wresize(help_win,1, term_x);
+
+      draw_info_win();
 
       box(channels_win, 0, 0);
       wrefresh(help_win);

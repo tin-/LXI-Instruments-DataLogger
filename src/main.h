@@ -26,42 +26,43 @@ static int i2c_fd;
 
 typedef struct
 {
-    int device[MAX_CHANNELS];
-    int Timeout[MAX_CHANNELS];
-    const char *Device_name[MAX_CHANNELS];
-    const char *IP[MAX_CHANNELS];
-    const char *Read_command[MAX_CHANNELS];
-    const char *Display_on_command[MAX_CHANNELS];
-    const char *Display_off_command[MAX_CHANNELS];
-    const char *Exit_command[MAX_CHANNELS];
-    const char *Instance[MAX_CHANNELS];
-    const char *Init_commands[MAX_CHANNELS][255];
-    int Protocol[MAX_CHANNELS];
-    int Port[MAX_CHANNELS];
-    pthread_t tid[MAX_CHANNELS];
+  int device[MAX_CHANNELS];
+  int Timeout[MAX_CHANNELS];
+  const char *Device_name[MAX_CHANNELS];
+  const char *IP[MAX_CHANNELS];
+  const char *Read_command[MAX_CHANNELS];
+  const char *Display_on_command[MAX_CHANNELS];
+  const char *Display_off_command[MAX_CHANNELS];
+  const char *Exit_command[MAX_CHANNELS];
+  const char *Instance[MAX_CHANNELS];
+  const char *Init_commands[MAX_CHANNELS][255];
+  int Protocol[MAX_CHANNELS];
+  int Port[MAX_CHANNELS];
+  pthread_t tid[MAX_CHANNELS];
 } ChannelsDef;
 
 
 typedef struct
 {
-    int screen_timeout;
-    int lxi_connect_timeout;
-    const char *csv_dots;
-    const char *csv_delimeter;
-    int syncfs;
-    int display_state;
+  int screen_timeout;
+  int lxi_connect_timeout;
+  const char *csv_dots;
+  const char *csv_delimeter;
+  int syncfs;
+  int display_state;
 } SettingsDef;
 
 typedef struct
-{   int i2c_address;
-    int config_word;
-    double delay;
-    double tmp117_last_read_time;
-    float temperature;
+{
+  int i2c_address;
+  int config_word;
+  double delay;
+  double tmp117_last_read_time;
+  float temperature;
 } temp_sensorsDef;
 
 uint64_t sample_num = 0;
-int term_x,term_y;
+int term_x, term_y;
 char response_massive[MAX_CHANNELS][RESPONSE_LEN];
 
 WINDOW *log_win;
@@ -76,20 +77,20 @@ ChannelsDef Channels;
 temp_sensorsDef temperature_sensors[4];
 const char *i2c_file_name;
 time_t rawtime;
-struct tm * timeinfo;
-char time_buffer [80];
+struct tm *timeinfo;
+char time_buffer[80];
 int tspan_count = 0;
-char lxi_command_to_send[255];
+char lxi_command_to_send[SEND_LEN];
 int channel_count = 0;
-config_t cfg; 
+config_t cfg;
 config_setting_t *setting, *init_commands, *setting_temp;
-int exit_code=0;
-int channel_count_temp=0;
+int exit_code = 0;
+int channel_count_temp = 0;
 
 
 
-void* measurement_thread(void *arg);
-void send_command_to_instrument(int chan, const char* arg);
+void *measurement_thread(void *arg);
+void send_command_to_instrument(int chan, const char *arg);
 void i2c_write(char i2c_dev_addr, char register_pointer, char data_MSB, char data_LSB);
 int16_t i2c_read_temp(char i2c_dev_addr, char addr);
 void configure_tmp117(int addr, int config);

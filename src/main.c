@@ -288,9 +288,11 @@ void init_config()
         tspan_count++;
         if(tspan_count > 1)
         {
-          fprintf(js_file_descriptor, "    {\"curveTitle\":\"%s\",		\"channel\":\"ch%i\",	\"offset\":0,		\"scale\":100,	\"group\":0,	\"tspan\":0,	\"axis_is_ppm\":0}, \n", device_temp_name, i + 17);
+          fprintf(js_file_descriptor, "    {\"curveTitle\":\"%s\",		\"channel\":\"ch%i\",	\"offset\":0,		\"scale\":100,	\"group\":0,	\"tspan\":0,	\"axis_is_ppm\":0}, \n",
+                  device_temp_name, i + 17);
         } else
-          fprintf(js_file_descriptor, "    {\"curveTitle\":\"%s\",		\"channel\":\"ch%i\",	\"offset\":0,		\"scale\":100,	\"group\":0,	\"tspan\":1,	\"axis_is_ppm\":0}, \n", device_temp_name, i + 17);
+          fprintf(js_file_descriptor, "    {\"curveTitle\":\"%s\",		\"channel\":\"ch%i\",	\"offset\":0,		\"scale\":100,	\"group\":0,	\"tspan\":1,	\"axis_is_ppm\":0}, \n",
+                  device_temp_name, i + 17);
       }
 
 
@@ -316,11 +318,11 @@ void init_config()
       config_setting_t *channels = config_setting_get_elem(setting, i);
 
       /* Выводим только те записи, если они имеют все нужные поля. */
-      if(!(config_setting_lookup_string(channels, "device_name", &Channels.Device_name[i])
-           && config_setting_lookup_string(channels, "IP", &Channels.IP[i])
-           && config_setting_lookup_int(channels, "Protocol", &Channels.Protocol[i])
-           && config_setting_lookup_string(channels, "Instance", &Channels.Instance[i])
-           && config_setting_lookup_int(channels, "Port", &Channels.Port[i]) && config_setting_lookup_int(channels, "Timeout", &Channels.Timeout[i]) && config_setting_lookup_string(channels, "Read_command", &Channels.Read_command[i])))
+      if(!
+         (config_setting_lookup_string(channels, "device_name", &Channels.Device_name[i]) && config_setting_lookup_string(channels, "IP", &Channels.IP[i])
+          && config_setting_lookup_int(channels, "Protocol", &Channels.Protocol[i]) && config_setting_lookup_string(channels, "Instance", &Channels.Instance[i])
+          && config_setting_lookup_int(channels, "Port", &Channels.Port[i]) && config_setting_lookup_int(channels, "Timeout", &Channels.Timeout[i])
+          && config_setting_lookup_string(channels, "Read_command", &Channels.Read_command[i])))
         continue;
 
       if(!config_setting_lookup_string(channels, "Exit_command", &Channels.Exit_command[i]))
@@ -331,7 +333,8 @@ void init_config()
         Channels.Display_off_command[i] = "";
 
       fprintf(csv_file_descriptor, "val%i%s", i + 1, Settings.csv_delimeter);
-      fprintf(js_file_descriptor, "    {\"curveTitle\":\"%s\",		\"channel\":\"ch%i\",	\"offset\":0,		\"scale\":1,	\"group\":0,	\"tspan\":0,	\"axis_is_ppm\":0}, \n", Channels.Device_name[i], i + 1);
+      fprintf(js_file_descriptor, "    {\"curveTitle\":\"%s\",		\"channel\":\"ch%i\",	\"offset\":0,		\"scale\":1,	\"group\":0,	\"tspan\":0,	\"axis_is_ppm\":0}, \n",
+              Channels.Device_name[i], i + 1);
 
       // LXI Connect and init devices
       if(Channels.Protocol[i] == 1)

@@ -1,23 +1,9 @@
 #include "main.h"
 #include <features.h>
-
-FILE *csv_file_descriptor, *js_file_descriptor;
-
-SettingsDef Settings;
-ChannelsDef Channels;
-temp_sensorsDef temperature_sensors[4];
-const char *i2c_file_name;
-time_t rawtime;
-struct tm * timeinfo;
-char time_buffer [80];
-int tspan_count = 0;
-char lxi_command_to_send[255];
-int channel_count = 0;
-config_t cfg; 
-config_setting_t *setting, *init_commands, *setting_temp;
-int exit_code=0;
-int channel_count_temp=0;
-
+// ---------------------------------------------------------------------------------------------------
+//
+//
+//
 // ---------------------------------------------------------------------------------------------------
 void* measurement_thread(void *arg)
 {
@@ -26,11 +12,8 @@ void* measurement_thread(void *arg)
     int myid = (int)((intptr_t)arg); 
     unsigned long i = 0;
     char response[RESPONSE_LEN];
-    char lxi_command_to_send_thread[255];
 
-	strcpy(lxi_command_to_send_thread, Channels.Read_command[myid]);
-	if(Channels.Protocol[myid]==0) strcat(lxi_command_to_send_thread, "\n");
-	lxi_send(Channels.device[myid], lxi_command_to_send_thread, strlen(lxi_command_to_send_thread), Channels.Timeout[myid]);  // Send SCPI commnd
+        send_command_to_instrument(myid, Channels.Read_command[myid]);
 	lxi_receive(Channels.device[myid], response, sizeof(response), Channels.Timeout[myid]);  // Wait for response
 
         while (strchr("\t\n\v\f\r ", response[i]) == NULL)
@@ -45,9 +28,25 @@ void* measurement_thread(void *arg)
     return NULL;
 }
 // ---------------------------------------------------------------------------------------------------
+//
+//
+//
+// ---------------------------------------------------------------------------------------------------
+void send_command_to_instrument(int chan, const char* arg)
+{
+    extern ChannelsDef Channels;
+    char command[SEND_LEN];
 
+    strcpy(command, arg);
+    if(Channels.Protocol[chan]==0) strcat(command, "\n");
+    lxi_send(Channels.device[chan], command, strlen(command), Channels.Timeout[chan]);  // Send SCPI commnd
 
-
+    return;
+}
+// ---------------------------------------------------------------------------------------------------
+//
+//
+//
 // ---------------------------------------------------------------------------------------------------
 void i2c_write(char i2c_dev_addr, char register_pointer, char data_MSB, char data_LSB)
 {
@@ -83,8 +82,9 @@ void i2c_write(char i2c_dev_addr, char register_pointer, char data_MSB, char dat
     return;
 }
 // ---------------------------------------------------------------------------------------------------
-
-
+//
+//
+//
 // ---------------------------------------------------------------------------------------------------
 int16_t i2c_read_temp(char i2c_dev_addr, char addr)
 {
@@ -122,9 +122,9 @@ int16_t i2c_read_temp(char i2c_dev_addr, char addr)
     return (data[0]<<8) + data[1];
 }
 // ---------------------------------------------------------------------------------------------------
-
-
-
+//
+//
+//
 // ---------------------------------------------------------------------------------------------------
 void configure_tmp117(int addr, int config)
 {
@@ -141,10 +141,9 @@ void configure_tmp117(int addr, int config)
     close(i2c_fd);
 }
 // ---------------------------------------------------------------------------------------------------
-
-
-
-
+//
+//
+//
 // ---------------------------------------------------------------------------------------------------
 void read_temp(int chan, int addr)
 {
@@ -169,9 +168,9 @@ void read_temp(int chan, int addr)
     }
 }
 // ---------------------------------------------------------------------------------------------------
-
-
-
+//
+//
+//
 // ---------------------------------------------------------------------------------------------------
 void init_config()
 {
@@ -237,7 +236,7 @@ void init_config()
   if(!config_lookup_int(&cfg,    "screen_refresh_div", &Settings.screen_timeout))Settings.screen_timeout=1;
   if(!config_lookup_int(&cfg,    "syncfs",             &Settings.syncfs))        Settings.syncfs=0;
   if(!config_lookup_int(&cfg,    "display_state",      &Settings.display_state)) Settings.display_state=1;
-  if(!config_lookup_int(&cfg,    "LXI_connect_timeout",&Settings.lxi_connect_timeout)) Settings.lxi_connect_timeout=10000;
+  if(!config_lookup_int(&cfg,    "LXI_connect_timeout",&Settings.lxi_connect_timeout)) Settings.lxi_connect_timeout=1000;
 
   fprintf(csv_file_descriptor,"sample%sdate%stime%s", Settings.csv_delimeter, Settings.csv_delimeter, Settings.csv_delimeter);
 
@@ -338,10 +337,9 @@ void init_config()
 
 }
 // ---------------------------------------------------------------------------------------------------
-
-
-
-
+//
+//
+//
 // ---------------------------------------------------------------------------------------------------
 int main(int argc, char **argv)
 {
@@ -427,9 +425,8 @@ int main(int argc, char **argv)
         k = 0;
         while (strlen(Channels.Init_commands[i][k])>0)
 	{
-	    strcpy(lxi_command_to_send, Channels.Init_commands[i][k]);
-	    if(Channels.Protocol[i]==0) strcat(lxi_command_to_send, "\n");
-	    lxi_send(Channels.device[i], lxi_command_to_send, strlen(lxi_command_to_send), Channels.Timeout[i]);  // Send SCPI commnd
+
+	    send_command_to_instrument(i, Channels.Init_commands[i][k]);
 	    wprintw(log_win,"%s send init: %s\n", Channels.Device_name[i],Channels.Init_commands[i][k]);
 	    wrefresh(log_win);
 	    k++;
@@ -445,16 +442,11 @@ fclose(js_file_descriptor);
 for(i = 0; i < channel_count; ++i)if(Channels.device[i]>=0)
 {
   if(Settings.display_state==0){
-     strcpy(lxi_command_to_send, Channels.Display_off_command[i]);
-     if(Channels.Protocol[i]==0) strcat(lxi_command_to_send, "\n");
-     lxi_send(Channels.device[i], lxi_command_to_send, strlen(lxi_command_to_send), Channels.Timeout[i]);  // Send SCPI commnd
-     wprintw(log_win,"%s send init: %s\n", Channels.Device_name[i],Channels.Display_off_command[i]);
+    send_command_to_instrument(i, Channels.Display_off_command[i]);
+    wprintw(log_win,"%s send init: %s\n", Channels.Device_name[i],Channels.Display_off_command[i]);
   }else{
-
-     strcpy(lxi_command_to_send, Channels.Display_on_command[i]);
-     if(Channels.Protocol[i]==0) strcat(lxi_command_to_send, "\n");
-     lxi_send(Channels.device[i], lxi_command_to_send, strlen(lxi_command_to_send), Channels.Timeout[i]);  // Send SCPI commnd
-     wprintw(log_win,"%s send init: %s\n", Channels.Device_name[i],Channels.Display_on_command[i]);
+    send_command_to_instrument(i, Channels.Display_on_command[i]);
+    wprintw(log_win,"%s send init: %s\n", Channels.Device_name[i],Channels.Display_on_command[i]);
   }
 }
 wrefresh(log_win);
@@ -478,9 +470,7 @@ while(exit_code==0)
 
       for(i = 0; i < channel_count; ++i)if(Channels.device[i]>=0)
       {
-          strcpy(lxi_command_to_send, Channels.Exit_command[i]);
-          if(Channels.Protocol[i]==0) strcat(lxi_command_to_send, "\n");
-          lxi_send(Channels.device[i], lxi_command_to_send, strlen(lxi_command_to_send), Channels.Timeout[i]);  // Send SCPI commnd
+        send_command_to_instrument(i, Channels.Exit_command[i]);
       }
 
       exit_code++;
@@ -500,15 +490,11 @@ while(exit_code==0)
       {
         // Send display ON/OFF commands to instruments
         if(Settings.display_state==0){
-           strcpy(lxi_command_to_send, Channels.Display_off_command[i]);
-           if(Channels.Protocol[i]==0) strcat(lxi_command_to_send, "\n");
-           lxi_send(Channels.device[i], lxi_command_to_send, strlen(lxi_command_to_send), Channels.Timeout[i]);  // Send SCPI commnd
-           wprintw(log_win,"%s send init: %s\n", Channels.Device_name[i],Channels.Display_off_command[i]);
+	    send_command_to_instrument(i, Channels.Display_off_command[i]);
+	    wprintw(log_win,"%s send init: %s\n", Channels.Device_name[i],Channels.Display_off_command[i]);
         }else{
-           strcpy(lxi_command_to_send, Channels.Display_on_command[i]);
-           if(Channels.Protocol[i]==0) strcat(lxi_command_to_send, "\n");
-           lxi_send(Channels.device[i], lxi_command_to_send, strlen(lxi_command_to_send), Channels.Timeout[i]);  // Send SCPI commnd
-           wprintw(log_win,"%s send init: %s\n", Channels.Device_name[i],Channels.Display_on_command[i]);
+	    send_command_to_instrument(i, Channels.Display_on_command[i]);
+	    wprintw(log_win,"%s send init: %s\n", Channels.Device_name[i],Channels.Display_on_command[i]);
         }
       }
       wrefresh(log_win);

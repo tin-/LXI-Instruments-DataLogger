@@ -4,6 +4,7 @@
 
 #define MAX_CHANNELS   16
 #define RESPONSE_LEN   64
+#define SEND_LEN       255
 
 #include <stdio.h>
 #include <unistd.h>
@@ -67,5 +68,29 @@ WINDOW *log_win;
 WINDOW *channels_win;
 WINDOW *help_win;
 
-void* measurement_thread(void *arg);
+FILE *csv_file_descriptor, *js_file_descriptor;
 
+SettingsDef Settings;
+ChannelsDef Channels;
+temp_sensorsDef temperature_sensors[4];
+const char *i2c_file_name;
+time_t rawtime;
+struct tm * timeinfo;
+char time_buffer [80];
+int tspan_count = 0;
+char lxi_command_to_send[255];
+int channel_count = 0;
+config_t cfg; 
+config_setting_t *setting, *init_commands, *setting_temp;
+int exit_code=0;
+int channel_count_temp=0;
+
+
+
+void* measurement_thread(void *arg);
+void send_command_to_instrument(int chan, const char* arg);
+void i2c_write(char i2c_dev_addr, char register_pointer, char data_MSB, char data_LSB);
+int16_t i2c_read_temp(char i2c_dev_addr, char addr);
+void configure_tmp117(int addr, int config);
+void read_temp(int chan, int addr);
+void init_config();

@@ -377,7 +377,7 @@ int main(int argc, char **argv)
   wattron(channels_win,COLOR_PAIR(2));
   box(channels_win, 0, 0);
 
-  log_win = newwin(term_y-(channel_count+3)-1, term_x, channel_count+3+1, 0);
+  log_win = newwin(term_y-(channel_count+3)-1-1, term_x, channel_count+3+1, 0);
   scrollok(log_win, TRUE);
 
   legend_win = newwin(term_y-(channel_count+3)-1-1, term_x, channel_count+3, 0);
@@ -389,7 +389,7 @@ int main(int argc, char **argv)
 
   wprintw(help_win,"  SPACE - pause, q - quit, r - refresh window, d - display ON/OFF  ");
 
-  wprintw(legend_win,"sample     time     ");
+  wprintw(legend_win,"Sample     Time     ");
 
   for(i = 0; i < channel_count_temp; ++i)
   {

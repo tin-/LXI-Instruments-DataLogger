@@ -171,16 +171,6 @@ var svg4 = d3.select("body")
        vertical.style("left", mousex[0] + 8 + "px" );
        horizontal.style("top", mousex[1] + 6 + "px" );
        })
-//    .on("mousemove", function(){  
-//       mousex = d3.mouse(this);
-//       vertical.style("left", mousex[0] + 4 + "px" );
-//       horizontal.style("top", mousex[1] + 4 + "px" );
-//       })
-//    .on("mouseover", function(){  
-//       mousex = d3.mouse(this);
-//       vertical.style("left", mousex[0] + 4 + "px");
-//       horizontal.style("top", mousex[1] + 4 + "px");
-//       })
     .attr("width", width2 + margin.left + 2000)
     .attr("height", height + margin.top + margin.bottom+ 20*20)
     .append("g")
@@ -341,7 +331,7 @@ if(daCurve.channel=='ch17'||daCurve.channel=='ch18'||daCurve.channel=='ch19'||da
         .style("font-size","18px")
         .text(daCurve.curveTitle + " MEDIAN: " + d3.median(data, function(d) { return (d[daCurve.channel]);} ).toFixed(5) + "°C " +
                                    "σ=" + (d3.deviation(data, function(d) { return (d[daCurve.channel]);} )*1e3).toFixed(3) + "m°C " +
-                                   "Peak-to-peak: " + ((diff/(((max+min)/2)))).toFixed(6) + "°C");
+                                   "Peak-to-peak: " + (max-min).toFixed(6) + "°C");
 } else {
     svg4.append("text")      // text label for the x axis
         .attr("x", 50 )

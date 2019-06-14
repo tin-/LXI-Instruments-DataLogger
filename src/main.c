@@ -468,26 +468,29 @@ void draw_info_win()
     }
     for (counter = start_num; counter <= Channels.sub_channels_count[i]; ++counter)
     {
+
       chan_count++;
-      wprintw(legend_win, "Channel%i            ", chan_count);
 
       if(Channels.sub_channels_count[i] == 0)
       {
-        wmove(channels_win, total_temp_count + counter - start_num + i + 2, 1);
+        wmove(channels_win, total_temp_count + chan_count - 1 + 2, 1);
         wprintw(channels_win, "%-7i %-40s %-15s", chan_count, Channels.Device_name[i][0], Channels.IP[i]);
       } else
       {
-        wmove(channels_win, total_temp_count + counter - start_num + i + 2, 1);
+        wmove(channels_win, total_temp_count + chan_count - 1 + 2, 1);
         wprintw(channels_win, "%-7i %-20s%-20s %-15s", chan_count, Channels.Device_name[i][0], Channels.Device_name[i][counter], Channels.IP[i]);
       }
 
       if(Channels.device[i] < 0)
       {
-        wmove(channels_win, total_temp_count + i + 2, 66);
+        wmove(channels_win, total_temp_count + chan_count - 1 + 2, 66);
         wprintw(channels_win, "Connection failed!");
         wrefresh(channels_win);
         wprintw(log_win, "Can't connect to %s\n", Channels.Device_name[i][0]);
       }
+
+      wprintw(legend_win, "Channel%i            ", chan_count);
+
     }
   }
 

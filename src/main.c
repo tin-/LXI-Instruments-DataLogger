@@ -10,21 +10,37 @@ void *measurement_thread(void *arg)
   extern SettingsDef Settings;
   extern ChannelsDef Channels;
   int myid = (int) ((intptr_t) arg);
-  unsigned long i = 0;
+  unsigned long i;
   char response[RESPONSE_LEN];
 
-  send_command_to_instrument(myid, Channels.Read_command[myid]);
-  lxi_receive(Channels.device[myid], response, sizeof(response), Channels.Timeout[myid]);       // Wait for response
 
-  while (strchr("\t\n\v\f\r ", response[i]) == NULL)
+  int counter, start_num;
+  if(Channels.sub_channels_count[myid] == 0)
   {
-    if(strchr(".", response[i]) != NULL)
-      response[i] = Settings.csv_dots[0];
-    response_massive[myid][i] = response[i];
-    i++;
+    start_num = 0;
+  } else
+  {
+    start_num = 1;
   }
-  response[i] = '\0';
-  response_massive[myid][i] = '\0';
+
+  for (counter = start_num; counter <= Channels.sub_channels_count[myid]; counter++)
+  {
+    send_command_to_instrument(myid, Channels.Read_command[myid][counter]);
+    lxi_receive(Channels.device[myid], response, sizeof(response), Channels.Timeout[myid]);     // Wait for response
+
+    i = 0;
+
+    while (strchr("\t\n\v\f\r ", response[i]) == NULL)
+    {
+      if(strchr(".", response[i]) != NULL)
+        response[i] = Settings.csv_dots[0];
+      response_massive[myid][counter][i] = response[i];
+      i++;
+    }
+    response[i] = '\0';
+    response_massive[myid][counter][i] = '\0';
+//    wprintw(log_win, " %i R %s ", counter, response_massive[myid][counter]);
+  }
 
   return NULL;
 }
@@ -192,7 +208,7 @@ void init_config()
   char time_in_char[32];
   time_t tdate = time(NULL);
   char csv_file_name[512];
-  int i, k;
+  int i, k, chan_count = 0;
 
   config_init(&cfg);            // Initialize Libconfig library
 
@@ -271,8 +287,6 @@ void init_config()
 
   if(setting_temp != NULL)
   {
-    const char *device_temp_name;
-
     for (i = 0; i < channel_count_temp; ++i)
     {
       config_setting_t *channels_temp = config_setting_get_elem(setting_temp, i);
@@ -280,19 +294,20 @@ void init_config()
       /* Выводим только те записи, если они имеют все нужные поля. */
       if(!(config_setting_lookup_int(channels_temp, "address", &temperature_sensors[i].i2c_address)
            && config_setting_lookup_int(channels_temp, "config", &temperature_sensors[i].config_word)
-           && config_setting_lookup_float(channels_temp, "delay", &temperature_sensors[i].delay) && config_setting_lookup_string(channels_temp, "device_name", &device_temp_name)));
+           && config_setting_lookup_float(channels_temp, "delay", &temperature_sensors[i].delay) && config_setting_lookup_string(channels_temp, "device_name", &temperature_sensors[i].device_temp_name)));
 //        continue;
 
       if(temperature_sensors[i].i2c_address > 0)
       {
         tspan_count++;
+        total_temp_count++;
         if(tspan_count > 1)
         {
           fprintf(js_file_descriptor, "    {\"curveTitle\":\"%s\",		\"channel\":\"ch%i\",	\"offset\":0,		\"scale\":100,	\"group\":0,	\"tspan\":0,	\"axis_is_ppm\":0}, \n",
-                  device_temp_name, i + 17);
+                  temperature_sensors[i].device_temp_name, i + 17);
         } else
           fprintf(js_file_descriptor, "    {\"curveTitle\":\"%s\",		\"channel\":\"ch%i\",	\"offset\":0,		\"scale\":100,	\"group\":0,	\"tspan\":1,	\"axis_is_ppm\":0}, \n",
-                  device_temp_name, i + 17);
+                  temperature_sensors[i].device_temp_name, i + 17);
       }
 
 
@@ -300,6 +315,7 @@ void init_config()
     for (i = 0; i < channel_count_temp; ++i)
       if(temperature_sensors[i].i2c_address > 0)
       {
+        total_channels_count++;
         configure_tmp117(temperature_sensors[i].i2c_address, temperature_sensors[i].config_word);
         fprintf(csv_file_descriptor, "temp%i%s", i + 1, Settings.csv_delimeter);
       }
@@ -319,10 +335,9 @@ void init_config()
 
       /* Выводим только те записи, если они имеют все нужные поля. */
       if(!
-         (config_setting_lookup_string(channels, "device_name", &Channels.Device_name[i]) && config_setting_lookup_string(channels, "IP", &Channels.IP[i])
+         (config_setting_lookup_string(channels, "device_name", &Channels.Device_name[i][0]) && config_setting_lookup_string(channels, "IP", &Channels.IP[i])
           && config_setting_lookup_int(channels, "Protocol", &Channels.Protocol[i]) && config_setting_lookup_string(channels, "Instance", &Channels.Instance[i])
-          && config_setting_lookup_int(channels, "Port", &Channels.Port[i]) && config_setting_lookup_int(channels, "Timeout", &Channels.Timeout[i])
-          && config_setting_lookup_string(channels, "Read_command", &Channels.Read_command[i])))
+          && config_setting_lookup_int(channels, "Port", &Channels.Port[i]) && config_setting_lookup_int(channels, "Timeout", &Channels.Timeout[i])))
         continue;
 
       if(!config_setting_lookup_string(channels, "Exit_command", &Channels.Exit_command[i]))
@@ -332,10 +347,6 @@ void init_config()
       if(!config_setting_lookup_string(channels, "Display_off_command", &Channels.Display_off_command[i]))
         Channels.Display_off_command[i] = "";
 
-      fprintf(csv_file_descriptor, "val%i%s", i + 1, Settings.csv_delimeter);
-      fprintf(js_file_descriptor, "    {\"curveTitle\":\"%s\",		\"channel\":\"ch%i\",	\"offset\":0,		\"scale\":1,	\"group\":0,	\"tspan\":0,	\"axis_is_ppm\":0}, \n",
-              Channels.Device_name[i], i + 1);
-
       // LXI Connect and init devices
       if(Channels.Protocol[i] == 1)
       {
@@ -344,6 +355,50 @@ void init_config()
       {
         Channels.device[i] = lxi_connect(Channels.IP[i], Channels.Port[i], Channels.Instance[i], Settings.lxi_connect_timeout, RAW);    // Try connect to LXI
       }
+
+//      if(!(Channels.device[i] < 0))
+//      {
+      settings_sub_channels = config_setting_get_member(channels, "sub_channels");
+      k = 0;
+      if(settings_sub_channels)
+      {
+        while (1)
+        {
+
+          config_setting_t *settings_sub_channels_entry = config_setting_get_elem(settings_sub_channels, k);
+
+          if(settings_sub_channels_entry == NULL)
+            break;
+
+          config_setting_lookup_string(settings_sub_channels_entry, "device_name", &Channels.Device_name[i][k + 1]);
+          config_setting_lookup_string(settings_sub_channels_entry, "Read_command", &Channels.Read_command[i][k + 1]);
+
+          Channels.sub_channels_count[i] = k + 1;
+          chan_count++;
+
+          fprintf(csv_file_descriptor, "val%i%s", chan_count, Settings.csv_delimeter);
+          fprintf(js_file_descriptor, "    {\"curveTitle\":\"%s %s\",		\"channel\":\"ch%i\",	\"offset\":0,		\"scale\":1,	\"group\":0,	\"tspan\":0,	\"axis_is_ppm\":0}, \n",
+                  Channels.Device_name[i][0], Channels.Device_name[i][k + 1], chan_count);
+
+          total_channels_count++;
+          k++;
+
+        }
+      } else
+      {
+        config_setting_lookup_string(channels, "Read_command", &Channels.Read_command[i][0]);
+        Channels.sub_channels_count[i] = 0;
+        chan_count++;
+        total_channels_count++;
+
+        fprintf(csv_file_descriptor, "val%i%s", chan_count, Settings.csv_delimeter);
+        fprintf(js_file_descriptor, "    {\"curveTitle\":\"%s\",		\"channel\":\"ch%i\",	\"offset\":0,		\"scale\":1,	\"group\":0,	\"tspan\":0,	\"axis_is_ppm\":0}, \n",
+                Channels.Device_name[i][0], chan_count);
+
+
+      }
+//      }
+
 
       if(!(Channels.device[i] < 0))
       {
@@ -375,11 +430,14 @@ void init_config()
 // ---------------------------------------------------------------------------------------------------
 void draw_info_win()
 {
-  int i;
+  int i, counter, chan_count = 0, start_num;
 
   wmove(log_win, 0, 0);
   wmove(legend_win, 0, 0);
   wmove(help_win, 0, 0);
+  wmove(channels_win, 1, 1);
+
+  wprintw(channels_win, "%-7s %-40s %-15s %-15s", "Channel", "Device", "IP", "Data");
 
   wprintw(help_win, "  SPACE - pause, q - quit, r - refresh window, d - display ON/OFF  ");
 
@@ -390,13 +448,47 @@ void draw_info_win()
     if(temperature_sensors[i].i2c_address > 0)
     {
       wprintw(legend_win, "Temp%i    ", i);
+
+      wmove(channels_win, i + 2, 1);
+      wprintw(channels_win, "T%-6i %-40s", i, temperature_sensors[i].device_temp_name);
+      wrefresh(channels_win);
+
     }
   }
 
   for (i = 0; i < channel_count; ++i)
   {
-    wprintw(legend_win, "Channel%i            ", i);
 
+    if(Channels.sub_channels_count[i] == 0)
+    {
+      start_num = 0;
+    } else
+    {
+      start_num = 1;
+    }
+    for (counter = start_num; counter <= Channels.sub_channels_count[i]; ++counter)
+    {
+      chan_count++;
+      wprintw(legend_win, "Channel%i            ", chan_count);
+
+      if(Channels.sub_channels_count[i] == 0)
+      {
+        wmove(channels_win, total_temp_count + counter - start_num + i + 2, 1);
+        wprintw(channels_win, "%-7i %-40s %-15s", chan_count, Channels.Device_name[i][0], Channels.IP[i]);
+      } else
+      {
+        wmove(channels_win, total_temp_count + counter - start_num + i + 2, 1);
+        wprintw(channels_win, "%-7i %-20s%-20s %-15s", chan_count, Channels.Device_name[i][0], Channels.Device_name[i][counter], Channels.IP[i]);
+      }
+
+      if(Channels.device[i] < 0)
+      {
+        wmove(channels_win, total_temp_count + i + 2, 66);
+        wprintw(channels_win, "Connection failed!");
+        wrefresh(channels_win);
+        wprintw(log_win, "Can't connect to %s\n", Channels.Device_name[i][0]);
+      }
+    }
   }
 
   wrefresh(log_win);
@@ -408,28 +500,9 @@ void draw_info_win()
   // -------------------------------------------------------------
 
 
-  // Read settings -----------------------------------------------
-  if(setting != NULL)
-  {
 
-    wmove(channels_win, 1, 1);
-    wprintw(channels_win, "%-7s %-20s %-15s %-15s", "Channel", "Device", "IP", "Data");
 
-    for (i = 0; i < channel_count; ++i)
-    {
-      wmove(channels_win, i + 2, 1);
-      wprintw(channels_win, "%-7i %-20s %-15s", i, Channels.Device_name[i], Channels.IP[i]);
-      wrefresh(channels_win);
 
-      if(Channels.device[i] < 0)
-      {
-        wmove(channels_win, i + 2, 46);
-        wprintw(channels_win, "Connection failed!");
-        wrefresh(channels_win);
-        wprintw(log_win, "Can't connect to %s\n", Channels.Device_name[i]);
-      }
-    }
-  }
 }
 
 // ---------------------------------------------------------------------------------------------------
@@ -469,14 +542,14 @@ int main(int argc, char **argv)
   getmaxyx(stdscr, term_y, term_x);
 
 
-  channels_win = newwin(channel_count + 3, 65, 0, 0);
+  channels_win = newwin(total_channels_count + 3, 85, 0, 0);
   wattron(channels_win, COLOR_PAIR(2));
   box(channels_win, 0, 0);
 
-  log_win = newwin(term_y - (channel_count + 3) - 1 - 1, term_x, channel_count + 3 + 1, 0);
+  log_win = newwin(term_y - (total_channels_count + 3) - 1 - 1, term_x, total_channels_count + 3 + 1, 0);
   scrollok(log_win, TRUE);
 
-  legend_win = newwin(term_y - (channel_count + 3) - 1 - 1, term_x, channel_count + 3, 0);
+  legend_win = newwin(term_y - (total_channels_count + 3) - 1 - 1, term_x, total_channels_count + 3, 0);
   scrollok(legend_win, TRUE);
 
   help_win = newwin(1, term_x, term_y - 1, 0);
@@ -496,7 +569,7 @@ int main(int argc, char **argv)
       {
 
         send_command_to_instrument(i, Channels.Init_commands[i][k]);
-        wprintw(log_win, "%s send init: %s\n", Channels.Device_name[i], Channels.Init_commands[i][k]);
+        wprintw(log_win, "%s send init: %s\n", Channels.Device_name[i][0], Channels.Init_commands[i][k]);
         wrefresh(log_win);
         k++;
       }
@@ -514,11 +587,11 @@ int main(int argc, char **argv)
       if(Settings.display_state == 0)
       {
         send_command_to_instrument(i, Channels.Display_off_command[i]);
-        wprintw(log_win, "%s send init: %s\n", Channels.Device_name[i], Channels.Display_off_command[i]);
+        wprintw(log_win, "%s send init: %s\n", Channels.Device_name[i][0], Channels.Display_off_command[i]);
       } else
       {
         send_command_to_instrument(i, Channels.Display_on_command[i]);
-        wprintw(log_win, "%s send init: %s\n", Channels.Device_name[i], Channels.Display_on_command[i]);
+        wprintw(log_win, "%s send init: %s\n", Channels.Device_name[i][0], Channels.Display_on_command[i]);
       }
     }
   wrefresh(log_win);
@@ -568,11 +641,11 @@ int main(int argc, char **argv)
           if(Settings.display_state == 0)
           {
             send_command_to_instrument(i, Channels.Display_off_command[i]);
-            wprintw(log_win, "%s send init: %s\n", Channels.Device_name[i], Channels.Display_off_command[i]);
+            wprintw(log_win, "%s send init: %s\n", Channels.Device_name[i][0], Channels.Display_off_command[i]);
           } else
           {
             send_command_to_instrument(i, Channels.Display_on_command[i]);
-            wprintw(log_win, "%s send init: %s\n", Channels.Device_name[i], Channels.Display_on_command[i]);
+            wprintw(log_win, "%s send init: %s\n", Channels.Device_name[i][0], Channels.Display_on_command[i]);
           }
         }
       wrefresh(log_win);
@@ -587,9 +660,9 @@ int main(int argc, char **argv)
 
     case 'r':
       getmaxyx(stdscr, term_y, term_x);
-      wresize(log_win, term_y - (channel_count + 3) - 1 - 1, term_x);
+      wresize(log_win, term_y - (total_channels_count + 3) - 1 - 1, term_x);
       wresize(legend_win, 1, term_x);
-      wresize(channels_win, channel_count + 3, 65);
+      wresize(channels_win, total_channels_count + 3, 85);
       mvwin(help_win, term_y - 1, 0);
       wresize(help_win, 1, term_x);
 
@@ -615,8 +688,12 @@ int main(int argc, char **argv)
         pthread_create(&(Channels.tid[i]), NULL, measurement_thread, (void *) ((intptr_t) i));  // запуск LXI измерения
       } else
       {
-        response_massive[i][0] = '0';
-        response_massive[i][1] = '\0';
+        int counter;
+        for (counter = 0; counter <= Channels.sub_channels_count[i]; counter++)
+        {
+          response_massive[i][counter][0] = '0';
+          response_massive[i][counter][1] = '\0';
+        }
       }
     }
 
@@ -687,16 +764,34 @@ int main(int argc, char **argv)
 
         wprintw(log_win, "%7.3lf  ", temperature_sensors[i].temperature);
         fprintf(csv_file_descriptor, "%s%s", temp_in_char, Settings.csv_delimeter);
+
+        mvwprintw(channels_win, i + 2, 66, "%7.3lf", temperature_sensors[i].temperature);       // Print response
       }
     }
+
 
     // Draw measure
     for (i = 0; i < channel_count; ++i)
     {
-      if(Channels.device[i] >= 0)
-        mvwprintw(channels_win, i + 2, 46, "%-15s", response_massive[i]);       // Print response
-      wprintw(log_win, "%-20s", response_massive[i]);
-      fprintf(csv_file_descriptor, "%s%s", response_massive[i], Settings.csv_delimeter);
+//      if(Channels.device[i] >= 0)
+//        mvwprintw(channels_win, total_temp_count + i + 2, 66, "%-15s", response_massive[i][0]); // Print response
+
+      int counter, start_num;
+      if(Channels.sub_channels_count[i] == 0)
+      {
+        start_num = 0;
+      } else
+      {
+        start_num = 1;
+      }
+
+      for (counter = start_num; counter <= Channels.sub_channels_count[i]; counter++)
+      {
+        if(Channels.device[i] >= 0)
+          mvwprintw(channels_win, total_temp_count + counter - start_num + i + 2, 66, "%-15s", response_massive[i][counter]);   // Print response
+        wprintw(log_win, "%-20s", response_massive[i][counter]);
+        fprintf(csv_file_descriptor, "%s%s", response_massive[i][counter], Settings.csv_delimeter);
+      }
 
     }
 

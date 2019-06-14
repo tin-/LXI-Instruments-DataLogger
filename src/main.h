@@ -1,10 +1,11 @@
 #define ERROR_CREATE_THREAD -11
 #define ERROR_JOIN_THREAD   -12
-#define SUCCESS        0
+#define SUCCESS               0
 
-#define MAX_CHANNELS   16
-#define RESPONSE_LEN   64
-#define SEND_LEN       255
+#define MAX_CHANNELS       16
+#define MAX_SUB_CHANNELS   10
+#define RESPONSE_LEN       64
+#define SEND_LEN          255
 
 #include <stdio.h>
 #include <unistd.h>
@@ -28,9 +29,9 @@ typedef struct
 {
   int device[MAX_CHANNELS];
   int Timeout[MAX_CHANNELS];
-  const char *Device_name[MAX_CHANNELS];
+  const char *Device_name[MAX_CHANNELS][MAX_SUB_CHANNELS];
   const char *IP[MAX_CHANNELS];
-  const char *Read_command[MAX_CHANNELS];
+  const char *Read_command[MAX_CHANNELS][MAX_SUB_CHANNELS];
   const char *Display_on_command[MAX_CHANNELS];
   const char *Display_off_command[MAX_CHANNELS];
   const char *Exit_command[MAX_CHANNELS];
@@ -38,6 +39,7 @@ typedef struct
   const char *Init_commands[MAX_CHANNELS][255];
   int Protocol[MAX_CHANNELS];
   int Port[MAX_CHANNELS];
+  int sub_channels_count[MAX_CHANNELS];
   pthread_t tid[MAX_CHANNELS];
 } ChannelsDef;
 
@@ -59,11 +61,12 @@ typedef struct
   double delay;
   double tmp117_last_read_time;
   float temperature;
+  const char *device_temp_name;
 } temp_sensorsDef;
 
 uint64_t sample_num = 0;
 int term_x, term_y;
-char response_massive[MAX_CHANNELS][RESPONSE_LEN];
+char response_massive[MAX_CHANNELS][MAX_SUB_CHANNELS][RESPONSE_LEN];
 
 WINDOW *log_win;
 WINDOW *channels_win;
@@ -83,9 +86,11 @@ int tspan_count = 0;
 char lxi_command_to_send[SEND_LEN];
 int channel_count = 0;
 config_t cfg;
-config_setting_t *setting, *init_commands, *setting_temp;
+config_setting_t *setting, *init_commands, *setting_temp, *settings_sub_channels;
 int exit_code = 0;
 int channel_count_temp = 0;
+int total_channels_count = 0;
+int total_temp_count = 0;
 
 
 

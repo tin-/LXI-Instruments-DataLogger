@@ -101,14 +101,7 @@ Note: use syncfs=1 when CSV file placed to TMPFS partition, otherwise use syncfs
 
 Measure LM399AH 10.6V reference:
 
-![](https://misrv.com/wp-content/uploads/2019/05/cons_dl3.jpg)
-
-Legend: 
-- Sample number
-- Timestamp
-- Ambient Temperature from TMP117
-- Channel 0 reading (34410A - output voltage)
-- Channel 1 reading (E36313A - input current)
+![](https://misrv.com/wp-content/uploads/2019/06/logger.png)
 
 After some post-processing with Excel or other software you can build graph like this:
 ![](https://misrv.com/wp-content/uploads/2019/05/lm399_34410.png)

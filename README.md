@@ -40,7 +40,7 @@ Measurements data saved into csv_save_dir. CSV file name generated automatically
 
 Into 'channels' config section you can configure up to 16 different instruments for paralells measurements. Each instruments can be configured with different init-string, timeout, read-command, and connection settings.
 
-For high-speed measurements(NPLC lower 0.1) you can configure refresh speed devider 'screen_refresh_div' for low CPU usage in screen refresh code. As example screen_refresh_div=100 has refreshed screen after each 100 measurements, it may take up to 2 times faster data receiving.
+Screen update rate slowdown to 100 ms refresh interval, for low CPU usage on high-speed measurements(NPLC lower 1).
 
 ## Texas Instruments TMP117 temperature sensor
 
@@ -99,16 +99,11 @@ Note: use syncfs=1 when CSV file placed to TMPFS partition, otherwise use syncfs
 
 ## Screenshot
 
+Measure MOX112523100AK with multi channel feature:
+
+![](https://misrv.com/wp-content/uploads/2019/06/logger.png)
+
 Measure LM399AH 10.6V reference:
-
-![](https://misrv.com/wp-content/uploads/2019/05/cons_dl3.jpg)
-
-Legend: 
-- Sample number
-- Timestamp
-- Ambient Temperature from TMP117
-- Channel 0 reading (34410A - output voltage)
-- Channel 1 reading (E36313A - input current)
 
 After some post-processing with Excel or other software you can build graph like this:
 ![](https://misrv.com/wp-content/uploads/2019/05/lm399_34410.png)

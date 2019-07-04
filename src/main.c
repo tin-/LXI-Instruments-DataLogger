@@ -40,10 +40,9 @@ void *measurement_thread(void *arg)
 
     response[i] = '\0';
     response_massive[myid][counter][i] = '\0';
-//    wprintw(log_win, " %i R %s ", counter, response_massive[myid][counter]);
   }
 
-  return NULL;
+  pthread_exit(NULL);
 }
 
 // ---------------------------------------------------------------------------------------------------
@@ -269,8 +268,6 @@ void init_config()
     Settings.csv_dots = ".";
   if(!config_lookup_string(&cfg, "csv_delimeter", &Settings.csv_delimeter))
     Settings.csv_delimeter = ",";
-  if(!config_lookup_int(&cfg, "screen_refresh_div", &Settings.screen_timeout))
-    Settings.screen_timeout = 1;
   if(!config_lookup_int(&cfg, "syncfs", &Settings.syncfs))
     Settings.syncfs = 0;
   if(!config_lookup_int(&cfg, "display_state", &Settings.display_state))
@@ -518,7 +515,7 @@ int main(int argc, char **argv)
 {
   int i, k;
   int status_addr, status;
-  struct timespec start, stop;
+  struct timespec start, stop, display_start, display_stop;
   double accum;
   char time_in_char[32], temp_in_char[32];
   int time_in_char_pos = 0, temp_in_char_pos = 0;
@@ -605,80 +602,78 @@ int main(int argc, char **argv)
 
 // Start time measurement
   clock_gettime(CLOCK_REALTIME, &start);
+  clock_gettime(CLOCK_REALTIME, &display_start);
 
 
 // Read data ---------------------------------------------------
-  int screen_timeout_count = 0;
   while (exit_code == 0)
   {
+    switch (getch())
+    {
+    case 'q':
 
-    if(screen_timeout_count >= Settings.screen_timeout)
-      switch (getch())
-      {
-      case 'q':
-
-        for (i = 0; i < channel_count; ++i)
-          if(Channels.device[i] >= 0)
-          {
-            send_command_to_instrument(i, Channels.Exit_command[i]);
-          }
-
-        exit_code++;
-        break;
-
-      case 'd':
-
-        if(Settings.display_state == 0)
+      for (i = 0; i < channel_count; ++i)
+        if(Channels.device[i] >= 0)
         {
-          Settings.display_state = 1;
-        } else
-        {
-          Settings.display_state = 0;
+          send_command_to_instrument(i, Channels.Exit_command[i]);
         }
 
-        wprintw(log_win, "\n");
+      exit_code++;
+      break;
 
-        for (i = 0; i < channel_count; ++i)
-          if(Channels.device[i] >= 0)
-          {
-            // Send display ON/OFF commands to instruments
-            if(Settings.display_state == 0)
-            {
-              send_command_to_instrument(i, Channels.Display_off_command[i]);
-              wprintw(log_win, "%s send init: %s\n", Channels.Device_name[i][0], Channels.Display_off_command[i]);
-            } else
-            {
-              send_command_to_instrument(i, Channels.Display_on_command[i]);
-              wprintw(log_win, "%s send init: %s\n", Channels.Device_name[i][0], Channels.Display_on_command[i]);
-            }
-          }
-        wrefresh(log_win);
+    case 'd':
 
-        break;
-
-
-      case ' ':
-        while (getch() != ' ')
-          sleep(1);
-        break;
-
-      case 'r':
-        getmaxyx(stdscr, term_y, term_x);
-        wresize(log_win, term_y - (total_channels_count + 3) - 1 - 1, term_x);
-        wresize(legend_win, 1, term_x);
-        wresize(channels_win, total_channels_count + 3, 85);
-        mvwin(help_win, term_y - 1, 0);
-        wresize(help_win, 1, term_x);
-
-        draw_info_win();
-
-        box(channels_win, 0, 0);
-        wrefresh(help_win);
-        wrefresh(log_win);
-        wrefresh(legend_win);
-        wrefresh(channels_win);
-        break;
+      if(Settings.display_state == 0)
+      {
+        Settings.display_state = 1;
+      } else
+      {
+        Settings.display_state = 0;
       }
+
+      wprintw(log_win, "\n");
+
+      for (i = 0; i < channel_count; ++i)
+        if(Channels.device[i] >= 0)
+        {
+          // Send display ON/OFF commands to instruments
+          if(Settings.display_state == 0)
+          {
+            send_command_to_instrument(i, Channels.Display_off_command[i]);
+            wprintw(log_win, "%s send init: %s\n", Channels.Device_name[i][0], Channels.Display_off_command[i]);
+          } else
+          {
+            send_command_to_instrument(i, Channels.Display_on_command[i]);
+            wprintw(log_win, "%s send init: %s\n", Channels.Device_name[i][0], Channels.Display_on_command[i]);
+          }
+        }
+      wrefresh(log_win);
+
+      break;
+
+
+    case ' ':
+      while (getch() != ' ')
+        sleep(1);
+      break;
+
+    case 'r':
+      getmaxyx(stdscr, term_y, term_x);
+      wresize(log_win, term_y - (total_channels_count + 3) - 1 - 1, term_x);
+      wresize(legend_win, 1, term_x);
+      wresize(channels_win, total_channels_count + 3, 85);
+      mvwin(help_win, term_y - 1, 0);
+      wresize(help_win, 1, term_x);
+
+      draw_info_win();
+
+      box(channels_win, 0, 0);
+      wrefresh(help_win);
+      wrefresh(log_win);
+      wrefresh(legend_win);
+      wrefresh(channels_win);
+      break;
+    }
 
     if(exit_code != 0)
       break;
@@ -759,7 +754,8 @@ int main(int argc, char **argv)
     }
 
 
-    for (i = 0; i < channel_count; ++i) // Wait threads complete
+    // Wait threads complete
+    for (i = 0; i < channel_count; ++i)
     {
       if(Channels.device[i] >= 0)
       {
@@ -807,13 +803,15 @@ int main(int argc, char **argv)
       syncfs(fileno(csv_file_descriptor));
     }
 
-    if(screen_timeout_count >= Settings.screen_timeout)
+    clock_gettime(CLOCK_REALTIME, &display_stop);       // Fix clock
+    accum = ((display_stop.tv_sec - display_start.tv_sec) + (display_stop.tv_nsec - display_start.tv_nsec) / 1E9) * 1000;
+
+    if(accum >= REFRESH_SCREEN_TIMEOUT_MS)
     {
       wrefresh(channels_win);
       wrefresh(log_win);
-      screen_timeout_count = 0;
-    } else
-      screen_timeout_count++;
+      clock_gettime(CLOCK_REALTIME, &display_start);
+    }
     // ---------------------------------------------------------
 
 

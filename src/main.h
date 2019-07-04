@@ -6,6 +6,7 @@
 #define MAX_SUB_CHANNELS   10
 #define RESPONSE_LEN       64
 #define SEND_LEN          256
+#define REFRESH_SCREEN_TIMEOUT_MS 100
 
 #include <stdio.h>
 #include <unistd.h>
@@ -46,7 +47,6 @@ typedef struct
 
 typedef struct
 {
-  int screen_timeout;
   int lxi_connect_timeout;
   const char *csv_dots;
   const char *csv_delimeter;

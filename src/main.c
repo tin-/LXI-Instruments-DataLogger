@@ -37,6 +37,7 @@ void *measurement_thread(void *arg)
       response_massive[myid][counter][i] = response[i];
       i++;
     }
+
     response[i] = '\0';
     response_massive[myid][counter][i] = '\0';
 //    wprintw(log_win, " %i R %s ", counter, response_massive[myid][counter]);
@@ -611,73 +612,73 @@ int main(int argc, char **argv)
   while (exit_code == 0)
   {
 
-
-    switch (getch())
-    {
-    case 'q':
-
-      for (i = 0; i < channel_count; ++i)
-        if(Channels.device[i] >= 0)
-        {
-          send_command_to_instrument(i, Channels.Exit_command[i]);
-        }
-
-      exit_code++;
-      break;
-
-    case 'd':
-
-      if(Settings.display_state == 0)
+    if(screen_timeout_count >= Settings.screen_timeout)
+      switch (getch())
       {
-        Settings.display_state = 1;
-      } else
-      {
-        Settings.display_state = 0;
-      }
+      case 'q':
 
-      wprintw(log_win, "\n");
-
-      for (i = 0; i < channel_count; ++i)
-        if(Channels.device[i] >= 0)
-        {
-          // Send display ON/OFF commands to instruments
-          if(Settings.display_state == 0)
+        for (i = 0; i < channel_count; ++i)
+          if(Channels.device[i] >= 0)
           {
-            send_command_to_instrument(i, Channels.Display_off_command[i]);
-            wprintw(log_win, "%s send init: %s\n", Channels.Device_name[i][0], Channels.Display_off_command[i]);
-          } else
-          {
-            send_command_to_instrument(i, Channels.Display_on_command[i]);
-            wprintw(log_win, "%s send init: %s\n", Channels.Device_name[i][0], Channels.Display_on_command[i]);
+            send_command_to_instrument(i, Channels.Exit_command[i]);
           }
+
+        exit_code++;
+        break;
+
+      case 'd':
+
+        if(Settings.display_state == 0)
+        {
+          Settings.display_state = 1;
+        } else
+        {
+          Settings.display_state = 0;
         }
-      wrefresh(log_win);
 
-      break;
+        wprintw(log_win, "\n");
+
+        for (i = 0; i < channel_count; ++i)
+          if(Channels.device[i] >= 0)
+          {
+            // Send display ON/OFF commands to instruments
+            if(Settings.display_state == 0)
+            {
+              send_command_to_instrument(i, Channels.Display_off_command[i]);
+              wprintw(log_win, "%s send init: %s\n", Channels.Device_name[i][0], Channels.Display_off_command[i]);
+            } else
+            {
+              send_command_to_instrument(i, Channels.Display_on_command[i]);
+              wprintw(log_win, "%s send init: %s\n", Channels.Device_name[i][0], Channels.Display_on_command[i]);
+            }
+          }
+        wrefresh(log_win);
+
+        break;
 
 
-    case ' ':
-      while (getch() != ' ')
-        sleep(1);
-      break;
+      case ' ':
+        while (getch() != ' ')
+          sleep(1);
+        break;
 
-    case 'r':
-      getmaxyx(stdscr, term_y, term_x);
-      wresize(log_win, term_y - (total_channels_count + 3) - 1 - 1, term_x);
-      wresize(legend_win, 1, term_x);
-      wresize(channels_win, total_channels_count + 3, 85);
-      mvwin(help_win, term_y - 1, 0);
-      wresize(help_win, 1, term_x);
+      case 'r':
+        getmaxyx(stdscr, term_y, term_x);
+        wresize(log_win, term_y - (total_channels_count + 3) - 1 - 1, term_x);
+        wresize(legend_win, 1, term_x);
+        wresize(channels_win, total_channels_count + 3, 85);
+        mvwin(help_win, term_y - 1, 0);
+        wresize(help_win, 1, term_x);
 
-      draw_info_win();
+        draw_info_win();
 
-      box(channels_win, 0, 0);
-      wrefresh(help_win);
-      wrefresh(log_win);
-      wrefresh(legend_win);
-      wrefresh(channels_win);
-      break;
-    }
+        box(channels_win, 0, 0);
+        wrefresh(help_win);
+        wrefresh(log_win);
+        wrefresh(legend_win);
+        wrefresh(channels_win);
+        break;
+      }
 
     if(exit_code != 0)
       break;
@@ -700,19 +701,7 @@ int main(int argc, char **argv)
       }
     }
 
-    for (i = 0; i < channel_count; ++i) // Wait threads complete
-    {
-      if(Channels.device[i] >= 0)
-      {
-        status = pthread_join(Channels.tid[i], (void **) &status_addr);
-        if(status != SUCCESS)
-        {
-          wprintw(log_win, "main error: can't join thread, status = %d\n", status);
-          exit(ERROR_JOIN_THREAD);
-        }
-
-      }
-    }
+    wprintw(log_win, "\n");
 
     // Calculate time
     clock_gettime(CLOCK_REALTIME, &stop);       // Fix clock
@@ -728,9 +717,6 @@ int main(int argc, char **argv)
         }
     }
 
-    // ---------------------------------------------------------
-
-    wprintw(log_win, "\n");
 
     // Draw log table and save CSV
 
@@ -773,12 +759,27 @@ int main(int argc, char **argv)
     }
 
 
+    for (i = 0; i < channel_count; ++i) // Wait threads complete
+    {
+      if(Channels.device[i] >= 0)
+      {
+        status = pthread_join(Channels.tid[i], (void **) &status_addr);
+        if(status != SUCCESS)
+        {
+          wprintw(log_win, "main error: can't join thread, status = %d\n", status);
+          exit(ERROR_JOIN_THREAD);
+        }
+
+      }
+    }
+
+
+    // ---------------------------------------------------------
+
+
     // Draw measure
     for (i = 0; i < channel_count; ++i)
     {
-//      if(Channels.device[i] >= 0)
-//        mvwprintw(channels_win, total_temp_count + i + 2, 66, "%-15s", response_massive[i][0]); // Print response
-
       int counter, start_num;
       if(Channels.sub_channels_count[i] == 0)
       {

@@ -5,7 +5,7 @@
 #define MAX_CHANNELS       16
 #define MAX_SUB_CHANNELS   10
 #define RESPONSE_LEN       64
-#define SEND_LEN          255
+#define SEND_LEN          256
 
 #include <stdio.h>
 #include <unistd.h>

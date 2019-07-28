@@ -1,2 +1,4 @@
 /bin/lxiidl
 /git.sh
+/src/*.h~
+/src/*.c~

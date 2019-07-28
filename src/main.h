@@ -8,6 +8,7 @@
 #define SEND_LEN          256
 #define REFRESH_SCREEN_TIMEOUT_MS 100
 
+#include <sys/ioctl.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -21,6 +22,7 @@
 #include <malloc.h>
 #include <locale.h>
 #include <linux/i2c-dev.h>
+#include <linux/i2c.h>
 #include <unistd.h>
 
 
@@ -97,7 +99,7 @@ int total_temp_count = 0;
 void *measurement_thread(void *arg);
 void send_command_to_instrument(int chan, const char *arg);
 void i2c_write(char i2c_dev_addr, char register_pointer, char data_MSB, char data_LSB);
-int16_t i2c_read_temp(char i2c_dev_addr, char addr);
+int16_t i2c_read_temp(char i2c_dev_addr, __u8 addr);
 void configure_tmp117(int addr, int config);
 void read_temp(int chan, int addr);
 void init_config();

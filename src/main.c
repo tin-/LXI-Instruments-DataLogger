@@ -72,7 +72,7 @@ void i2c_write(char i2c_dev_addr, char register_pointer, char data_MSB, char dat
 {
   int ret;
 
-  char data[3] = { register_pointer, data_MSB, data_LSB };
+  __u8 data[3] = { register_pointer, data_MSB, data_LSB };
   struct i2c_msg msg[1];
   struct i2c_rdwr_ioctl_data xfer = {
     .msgs = msg,
@@ -109,10 +109,10 @@ void i2c_write(char i2c_dev_addr, char register_pointer, char data_MSB, char dat
 //
 //
 // ---------------------------------------------------------------------------------------------------
-int16_t i2c_read_temp(char i2c_dev_addr, char addr)
+int16_t i2c_read_temp(char i2c_dev_addr, __u8 addr)
 {
   int ret;
-  char data[2] = { 0, 0 };
+  __u8 data[2] = { 0, 0 };
   struct i2c_msg msg[2];
   struct i2c_rdwr_ioctl_data xfer = {
     .msgs = msg,

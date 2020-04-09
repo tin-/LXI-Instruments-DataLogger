@@ -329,7 +329,7 @@ if(daCurve.channel=='ch17'||daCurve.channel=='ch18'||daCurve.channel=='ch19'||da
         .style("text-anchor", "left")
         .style("fill", function() {return daCurve.color = color(daCurve.curveTitle); })
         .style("font-size","18px")
-        .text(daCurve.curveTitle + " MEDIAN: " + d3.median(data, function(d) { return (d[daCurve.channel]);} ).toFixed(5) + "°C " +
+        .text(daCurve.curveTitle + " MEDIAN: " + d3.median(data, function(d) { return (d[daCurve.channel]);} ).toFixed(3) + "°C " +
                                    "σ=" + (d3.deviation(data, function(d) { return (d[daCurve.channel]);} )*1e3).toFixed(3) + "m°C " +
                                    "Peak-to-peak: " + (max-min).toFixed(3) + "°C");
 } else {

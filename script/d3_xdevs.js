@@ -247,7 +247,7 @@ if(daCurve.channel=='ch17'||daCurve.channel=='ch18'||daCurve.channel=='ch19'||da
     if(daCurve.axis_is_ppm==0){
 	eval(' var yAxisRight_' + daCurve.channel +' = d3.axisRight(yAxis_w_' + daCurve.channel + ').ticks('+axis_tick+')');
     } else {
-        eval(' var yAxisRight_' + daCurve.channel +' = d3.axisRight(yAxis_w_' + daCurve.channel + ').ticks('+axis_tick+').tickFormat(function(d) {return d3.format(\'.2f\')(((d/d3.median(data, function(d) { return (d[daCurve.channel]);} ).toPrecision(6))-1)*1E6) + \' ppm\'})');
+        eval(' var yAxisRight_' + daCurve.channel +' = d3.axisRight(yAxis_w_' + daCurve.channel + ').ticks('+axis_tick+').tickFormat(function(d) {return d3.format(\'.2f\')(((d/d3.median(data, function(d) { return (d[daCurve.channel]);} ).toPrecision(7))-1)*1E6) + \' ppm\'})');
     }
 }
 
